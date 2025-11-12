@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define N 700
-// #define THREADS 0
+// #define THREADS 2
 int main(int argc, char** argv) {
     int i, j, k;
     double sum = 0.0;
