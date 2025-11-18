@@ -13,8 +13,8 @@
 #SBATCH --nodes=1
 
 ####### Output #######
-#SBATCH --output=/path/to/your/home/out/pi_seq.out.%j
-#SBATCH --error=/path/to/your/home/out/pi_seq.err.%j
+#SBATCH --output=/home/fd0002114/out/pi_seq.out.%j
+#SBATCH --error=/home/fd0002114/out/pi_seq.err.%j
 
 export OMP_NUM_THREADS=4
 #cd /path/to/bin
