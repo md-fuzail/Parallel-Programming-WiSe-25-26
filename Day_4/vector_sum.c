@@ -22,6 +22,17 @@ int main(int argc, char** argv) {
         a[i] = 1.0;  // simple values for easy verification
     }
 
+    // Print the maximum number of threads OpenMP may use
+    printf("OMP max threads: %d\n", omp_get_max_threads());
+
+    // Print actual number of threads used in a parallel region
+    #pragma omp parallel
+    {
+        if (omp_get_thread_num() == 0) {
+            printf("OMP actual threads: %d\n", omp_get_num_threads());
+        }
+    }
+
     // Start timing
     start = omp_get_wtime();
 
