@@ -13,6 +13,8 @@ int main() {
     int chunk;
     omp_get_schedule(&kind, &chunk);
 
+    printf("OMP_SCHEDULE from environment: %s\n", getenv("OMP_SCHEDULE"));
+
     const char *schedule_name;
     switch (kind) {
         case omp_sched_static:   schedule_name = "static"; break;
