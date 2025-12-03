@@ -2,7 +2,7 @@
 #include <omp.h>
 #include <stdlib.h>
 
-static long num_steps = 100000;
+static long num_steps = 47000000;
 double step;
 
 int main() {
