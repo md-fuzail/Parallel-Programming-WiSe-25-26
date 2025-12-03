@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <omp.h>
 
-static long num_steps = 100000;
+static long num_steps = 47000000;
 double step;
 
 int main() {
-    int i;
+    long i;
     double x, pi, sum = 0.0;
     step = 1.0 / (double) num_steps;
 
