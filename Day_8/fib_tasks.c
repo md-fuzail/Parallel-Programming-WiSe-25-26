@@ -1,35 +1,14 @@
-/* fib_tasks.c
- *
- * Usage:
- *   ./fib_tasks <n> <cutoff>
- *
- * Example:
- *   ./fib_tasks 40 10
- *
- * If arguments are omitted, defaults are n=40, cutoff=10.
- *
- * This program:
- *  - computes fib(n) sequentially
- *  - computes fib(n) with OpenMP tasks and a cutoff
- *  - prints times and thread information
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
 
-/* Sequential recursive Fibonacci (intentionally naive) */
+/* Sequential recursive Fibonacci */
 long fib_seq(int n) {
     if (n < 2) return n;
     return fib_seq(n-1) + fib_seq(n-2);
 }
 
-/* Task-based recursive Fibonacci with cutoff.
- * If n <= cutoff, compute sequentially to avoid task overhead.
- *
- * This function must be called from inside a parallel region
- * (or by a task) so that #pragma omp task actually creates tasks.
- */
+/* Task-based recursive Fibonacci with cutoff. */
 long fib_task(int n, int cutoff) {
     if (n < 2) return n;
     if (n <= cutoff) {
@@ -72,9 +51,7 @@ int main(int argc, char **argv) {
     double seq_time = t1 - t0;
     printf("Sequential: fib(%d) = %ld, time = %.6f s\n", n, seq, seq_time);
 
-    /* Parallel run using tasks.
-     * We measure the whole region time. We will also print how many threads are active.
-     */
+    /* Parallel run using tasks. */
     long par_result = 0;
     double par_start = omp_get_wtime();
 
@@ -93,9 +70,7 @@ int main(int argc, char **argv) {
             /* spawn the first task(s) using the task-based function */
             par_result = fib_task(n, cutoff);
         }
-        /* implicit barrier here: all threads wait until tasks complete and single finishes */
     }
-
     double par_end = omp_get_wtime();
     double par_time = par_end - par_start;
 
