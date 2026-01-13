@@ -117,8 +117,6 @@ int main(int argc, char* argv[]) {
         /* Initial window */
         for (int i = 0; i < window_height; ++i) {
             unsigned long val = B[i * columns + j];
-            for (int w = 0; w < work_factor; ++w)
-                val = hash(val);
             window_sum += val;
         }
 
@@ -129,12 +127,6 @@ int main(int argc, char* argv[]) {
 
             unsigned long out_val = B[(i - 1) * columns + j];
             unsigned long in_val  = B[(i + window_height - 1) * columns + j];
-
-            for (int w = 0; w < work_factor; ++w) {
-                out_val = hash(out_val);
-                in_val  = hash(in_val);
-            }
-
             window_sum = window_sum - out_val + in_val;
 
             if (window_sum > max_sum)
