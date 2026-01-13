@@ -93,6 +93,17 @@ int main(int argc, char* argv[]) {
             printf("\n");
         }
     }
+    
+    /* ----------------- STEP 2: Pre-compute hashed values ----------------- */
+    unsigned long *B = (unsigned long*) malloc(rows * columns * sizeof(unsigned long));
+    #pragma omp parallel for schedule(static)
+    for (int k = 0; k < rows * columns; ++k) {
+        unsigned long val = A[k];
+        for (int w = 0; w < work_factor; ++w) {
+            val = hash(val);
+        }
+        B[k] = val;
+    }
 
     /* ----------------- STEP 3: Part 1 – Sliding window sums ----------------- */
     unsigned long *max_sums =
@@ -105,7 +116,7 @@ int main(int argc, char* argv[]) {
 
         /* Initial window */
         for (int i = 0; i < window_height; ++i) {
-            unsigned long val = A[i * columns + j];
+            unsigned long val = B[i * columns + j];
             for (int w = 0; w < work_factor; ++w)
                 val = hash(val);
             window_sum += val;
@@ -116,8 +127,8 @@ int main(int argc, char* argv[]) {
         /* Slide window */
         for (int i = 1; i <= rows - window_height; ++i) {
 
-            unsigned long out_val = A[(i - 1) * columns + j];
-            unsigned long in_val  = A[(i + window_height - 1) * columns + j];
+            unsigned long out_val = B[(i - 1) * columns + j];
+            unsigned long in_val  = B[(i + window_height - 1) * columns + j];
 
             for (int w = 0; w < work_factor; ++w) {
                 out_val = hash(out_val);
@@ -143,30 +154,10 @@ int main(int argc, char* argv[]) {
     }
 
     /* ----------------- STEP 4: Part 2 – Local hotspots ----------------- */
-    // 1. Allocate a temporary buffer for the hashed values
-    unsigned long *B = (unsigned long*) malloc(rows * columns * sizeof(unsigned long));
+    
     int *hotspots_per_row = (int*) calloc(rows, sizeof(int));
     int total_hotspots = 0;
 
-    // ---------------------------------------------------------
-    // PHASE 1: PRE-COMPUTATION
-    // Transform all data once and store it in B.
-    // We treat the matrix as a flat 1D array for maximum parallel efficiency.
-    // ---------------------------------------------------------
-    #pragma omp parallel for schedule(static)
-    for (int k = 0; k < rows * columns; ++k) {
-        unsigned long val = A[k];
-        for (int w = 0; w < work_factor; ++w) {
-            val = hash(val);
-        }
-        B[k] = val;
-    }
-
-    // ---------------------------------------------------------
-    // PHASE 2: HOTSPOT DETECTION
-    // Now we perform the logic using the pre-computed B array.
-    // No hashing happens here, only fast memory lookups and comparisons.
-    // ---------------------------------------------------------
     #pragma omp parallel for reduction(+:total_hotspots) schedule(static)
     for (int i = 0; i < rows; ++i) {
         int row_count = 0;
