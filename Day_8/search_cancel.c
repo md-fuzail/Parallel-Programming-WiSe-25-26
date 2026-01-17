@@ -44,7 +44,7 @@ int main() {
             #pragma omp cancel for
         }
     }
-    #pragma omp barrier
+    // #pragma omp barrier
 
     double end = omp_get_wtime();
 
