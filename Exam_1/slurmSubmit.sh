@@ -13,8 +13,8 @@
 #SBATCH --nodes=1
 
 ####### Output #######
-#SBATCH --output=/home/fd0002114/out/heatmap_analysis_optimized.out.%j
-#SBATCH --error=/home/fd0002114/out/heatmap_analysis_optimized.err.%j
+#SBATCH --output=/home/fd0002114/out/heatmap_analysis_eh.out.%j
+#SBATCH --error=/home/fd0002114/out/heatmap_analysis_eh.err.%j
 
 #cd /path/to/bin
-./heatmap_analysis_optimized 1024 786 123 0 100 55 0 1 100
+./heatmap_analysis_eh 1024 786 123 0 100 55 0 1 100
