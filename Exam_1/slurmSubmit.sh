@@ -13,8 +13,8 @@
 #SBATCH --nodes=1
 
 ####### Output #######
-#SBATCH --output=/home/fd0002114/out/heatmap_analysis_eh.out.%j
-#SBATCH --error=/home/fd0002114/out/heatmap_analysis_eh.err.%j
+#SBATCH --output=/home/fd0002114/out/pi_tasks_2.out.%j
+#SBATCH --error=/home/fd0002114/out/pi_tasks_2.err.%j
 
 #cd /path/to/bin
-./heatmap_analysis_eh 1024 786 123 0 100 55 0 1 100
+./pi_tasks_2 1000 4 100000 1000000 42
