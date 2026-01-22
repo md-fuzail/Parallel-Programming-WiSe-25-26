@@ -13,17 +13,17 @@
 #SBATCH --nodes=1
 
 ####### Output #######
-#SBATCH --output=/home/fd0001542/out/haq_speedup.out.%j
-#SBATCH --error=/home/fd0001542/out/haq_speedup.err.%j
+#SBATCH --output=/home/fd0001542/out/haq_speedup_early_exit.out.%j
+#SBATCH --error=/home/fd0001542/out/haq_speedup_early_exit.err.%j
 
-echo "heatmap_analysis_quick Speedup Measurements"
-echo "Parameters: columns=2048 rows=2048 seed=123 lower=0 upper=100 window_height=1024 verbose=0 work_factor=800"
+echo "heatmap_analysis_quick Speedup Measurements (Early Exit Enabled)"
+echo "Parameters: columns=3 rows=4 seed=42 lower=0 upper=10 window_height=2 verbose=0 work_factor=0"
 echo ""
 
 for threads in 1 2 4 8 16 32 64; do
     echo "Threads: $threads"
     export OMP_CANCELLATION=true
-    ./heatmap_analysis_quick 2048 2048 123 0 100 1024 0 $threads 800
+    ./heatmap_analysis_quick 3 4 42 0 10 2 1 $threads 0
     echo ""
 done
 

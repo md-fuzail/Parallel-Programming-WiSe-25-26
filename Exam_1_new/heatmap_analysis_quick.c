@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <omp.h>
 
-/* Provided helper functions */
+/* provided helper functions */
 
 unsigned long my_rand(unsigned long* state, unsigned long lower, unsigned long upper) {
     *state ^= *state >> 12;
@@ -30,8 +29,6 @@ unsigned long hash(unsigned long x) {
     return x;
 }
 
-/* Provided helper functions */
-
 
 int main(int argc, char* argv[]) {
 
@@ -42,16 +39,18 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    int columns       = atoi(argv[1]);
-    int rows          = atoi(argv[2]);
+    /* Parse command line arguments */
+    int columns = atoi(argv[1]);
+    int rows = atoi(argv[2]);
     unsigned long seed = strtoul(argv[3], NULL, 10);
     unsigned long lower = strtoul(argv[4], NULL, 10);
     unsigned long upper = strtoul(argv[5], NULL, 10);
     int window_height = atoi(argv[6]);
-    int verbose       = atoi(argv[7]);
-    int num_threads   = atoi(argv[8]);
-    int work_factor   = atoi(argv[9]);
+    int verbose = atoi(argv[7]);
+    int num_threads = atoi(argv[8]);
+    int work_factor = atoi(argv[9]);
 
+    /* Setup OpenMP environment */
     omp_set_num_threads(num_threads);
 
     printf("Starting heatmap_analysis\n");
@@ -62,16 +61,12 @@ int main(int argc, char* argv[]) {
 
     double start_time = omp_get_wtime();
 
-    // Allocate matrices on heap to avoid stack overflow
-    unsigned long *A = malloc(rows * columns * sizeof(unsigned long));
-    unsigned long *B = malloc(rows * columns * sizeof(unsigned long));
+    /* Allocate memory for heatmap and hashed copy */
+    unsigned long* A = malloc((size_t)rows * columns * sizeof(unsigned long));
+    unsigned long* B = malloc((size_t)rows * columns * sizeof(unsigned long));
 
-    if (!A || !B) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return 1;
-    }
-
-    // Initialize heatmap
+    /* Md Fuzail */
+    /* initialize heatmap with random values */
     #pragma omp parallel for schedule(static)
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < columns; ++j) {
@@ -80,95 +75,141 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Pre-compute hashed values
+    /* Ehtesham Faraz */
+    /* Apply hash transformation */
     #pragma omp parallel for schedule(static)
     for (int k = 0; k < rows * columns; ++k) {
-        unsigned long val = A[k];
+        unsigned long v = A[k];
         for (int w = 0; w < work_factor; ++w)
-            val = hash(val);
-        B[k] = val;
+            v = hash(v);
+        B[k] = v;
     }
 
+    /* Together start */
+    /* Early Exit case */
     int early_exit = 0;
-    int failing_row = -1;
+    int bad_row = -1;
+
+    #pragma omp parallel
+    {
+        #pragma omp for schedule(static)
+        for (int i = 0; i < rows; ++i) {
+
+            /* Check if cancellation was triggered by another thread */
+            #pragma omp cancellation point for
+
+            int row_hotspots = 0;
+
+            /* Check row for hotspots */
+            for (int j = 0; j < columns; ++j) {
+                unsigned long center = B[i * columns + j];
+                int is_hotspot = 1;
+
+                if (i > 0 && center <= B[(i - 1) * columns + j]) is_hotspot = 0;
+                if (is_hotspot && i < rows - 1 && center <= B[(i + 1) * columns + j]) is_hotspot = 0;
+                if (is_hotspot && j > 0 && center <= B[i * columns + j - 1]) is_hotspot = 0;
+                if (is_hotspot && j < columns - 1 && center <= B[i * columns + j + 1]) is_hotspot = 0;
+
+                if (is_hotspot)
+                    row_hotspots++;
+            }
+
+            /* If no hotspots found, trigger early exit */
+            if (row_hotspots == 0) {
+                #pragma omp critical
+                {
+                    if (!early_exit) {
+                        early_exit = 1;
+                        bad_row = i;
+                        printf("Row %d contains no hotspots.\n", i);
+                        printf("Early exit.\n");
+                    }
+                }
+                /* Signal cancellation to other threads */
+                #pragma omp cancel for
+            }
+        }
+    }
+
+    /* Handle early exit case */
+    if (early_exit) {
+        double end_time = omp_get_wtime();
+        printf("Execution took %.4f s\n", end_time - start_time);
+
+        free(A);
+        free(B);
+        return 0;
+    }
+    /* Together end */
+
+    /* Full Analysis: (Success Case) */
+    /* Md Fuzail */
+    /* Sliding window sums */
+    unsigned long* max_sums = malloc(columns * sizeof(unsigned long));
 
     #pragma omp parallel for schedule(static)
+    for (int j = 0; j < columns; ++j) {
+        unsigned long sum = 0;
+        for (int i = 0; i < window_height; ++i)
+            sum += B[i * columns + j];
+
+        unsigned long max_sum = sum;
+
+        for (int i = 1; i <= rows - window_height; ++i) {
+            sum -= B[(i - 1) * columns + j];
+            sum += B[(i + window_height - 1) * columns + j];
+            if (sum > max_sum)
+                max_sum = sum;
+        }
+        max_sums[j] = max_sum;
+    }
+
+    if (verbose) {
+        printf("Max sliding sums per column:\n");
+        for (int j = 0; j < columns; ++j)
+            printf("%lu%s", max_sums[j], (j + 1 < columns) ? ", " : "\n");
+    }
+
+    /* Full hotspot counting */
+    /* Ehtesham Faraz */
+    int* hotspots_per_row = calloc(rows, sizeof(int));
+    int total_hotspots = 0;
+
+    #pragma omp parallel for reduction(+:total_hotspots) schedule(static)
     for (int i = 0; i < rows; ++i) {
-
-        if (early_exit)
-            continue;
-
-        int has_hotspot = 0;
+        int count = 0;
 
         for (int j = 0; j < columns; ++j) {
+            unsigned long c = B[i * columns + j];
+            int ok = 1;
 
-            unsigned long center = B[i * columns + j];
-            int is_hotspot = 1;
+            if (i > 0 && c <= B[(i - 1) * columns + j]) ok = 0;
+            if (ok && i < rows - 1 && c <= B[(i + 1) * columns + j]) ok = 0;
+            if (ok && j > 0 && c <= B[i * columns + j - 1]) ok = 0;
+            if (ok && j < columns - 1 && c <= B[i * columns + j + 1]) ok = 0;
 
-            if (i > 0 && center <= B[(i - 1) * columns + j])
-                is_hotspot = 0;
-            if (i < rows - 1 && center <= B[(i + 1) * columns + j])
-                is_hotspot = 0;
-            if (j > 0 && center <= B[i * columns + (j - 1)])
-                is_hotspot = 0;
-            if (j < columns - 1 && center <= B[i * columns + (j + 1)])
-                is_hotspot = 0;
-
-            if (is_hotspot) {
-                has_hotspot = 1;
-                break;
+            if (ok) {
+                count++;
+                total_hotspots++;
             }
         }
-
-        if (!has_hotspot) {
-            #pragma omp critical
-            {
-                if (!early_exit) {
-                    early_exit = 1;
-                    failing_row = i;
-                    printf("Row %d contains no hotspots.\n", i);
-                    printf("Early exit.\n");
-                }
-            }
-        }
+        hotspots_per_row[i] = count;
     }
 
-    if (!early_exit) {
-
-        // Compute max sliding sums
-        unsigned long max_sums[columns];
-
-        #pragma omp parallel for schedule(static)
-        for (int j = 0; j < columns; ++j) {
-            unsigned long window_sum = 0;
-            for (int i = 0; i < window_height; ++i)
-                window_sum += B[i * columns + j];
-            unsigned long max_sum = window_sum;
-            for (int i = 1; i <= rows - window_height; ++i) {
-                unsigned long out_val = B[(i - 1) * columns + j];
-                unsigned long in_val  = B[(i + window_height - 1) * columns + j];
-                window_sum = window_sum - out_val + in_val;
-                if (window_sum > max_sum)
-                    max_sum = window_sum;
-            }
-            max_sums[j] = max_sum;
-        }
-
-        if (verbose) {
-            printf("Max sliding sums per column:\n");
-            for (int j = 0; j < columns; ++j) {
-                printf("%lu", max_sums[j]);
-                if (j < columns - 1) printf(", ");
-            }
-            printf("\n");
-        }
+    if (verbose) {
+        printf("Hotspots per row:\n");
+        for (int i = 0; i < rows; ++i)
+            printf("Row %d: %d hotspot(s)\n", i, hotspots_per_row[i]);
     }
+
+    printf("Total hotspots found: %d\n", total_hotspots);
 
     double end_time = omp_get_wtime();
     printf("Execution took %.4f s\n", end_time - start_time);
-
     free(A);
     free(B);
+    free(max_sums);
+    free(hotspots_per_row);
 
     return 0;
 }

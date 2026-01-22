@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <omp.h>
 
-/* Provided helper functions */
+/* provided helper functions*/
 
 unsigned long my_rand(unsigned long* state, unsigned long lower, unsigned long upper) {
     *state ^= *state >> 12;
@@ -30,9 +30,6 @@ unsigned long hash(unsigned long x) {
     return x;
 }
 
-/* Provided helper functions */
-
-
 int main(int argc, char* argv[]) {
 
     if (argc != 10) {
@@ -42,6 +39,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    /* Parse command line arguments */
     int columns       = atoi(argv[1]);
     int rows          = atoi(argv[2]);
     unsigned long seed = strtoul(argv[3], NULL, 10);
@@ -64,7 +62,7 @@ int main(int argc, char* argv[]) {
 
     size_t total_cells = (size_t)rows * columns;
 
-    // Allocate matrices on heap to avoid stack overflow
+    /* Allocate memory for raw and hashed matrices */
     unsigned long *A = malloc(total_cells * sizeof(unsigned long));
     unsigned long *B = malloc(total_cells * sizeof(unsigned long));
 
@@ -73,7 +71,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Initialize heatmap A
+    /* Fill matrix A with random values */
+    /* Ehtesham Faraz */
     #pragma omp parallel for schedule(static)
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < columns; ++j) {
@@ -82,6 +81,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    /* Compute hash matrix B for w work factor */
+    /* Md Fuzail */
     #pragma omp parallel for schedule(static)
     for (size_t k = 0; k < total_cells; ++k) {
         unsigned long val = A[k];
@@ -101,15 +102,18 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Compute max sliding sums
+    /* Ehtesham Faraz start */
+    /* Calculate maximum sliding window sums per column */
     unsigned long *max_sums = malloc(columns * sizeof(unsigned long));
 
     #pragma omp parallel for schedule(static)
     for (int j = 0; j < columns; ++j) {
         unsigned long window_sum = 0;
+        /* Calculate initial window sum */
         for (int i = 0; i < window_height; ++i)
             window_sum += B[i * columns + j];
         unsigned long max_sum = window_sum;
+        /* Slide window down the column */
         for (int i = 1; i <= rows - window_height; ++i) {
             window_sum = window_sum - B[(i - 1) * columns + j] + B[(i + window_height - 1) * columns + j];
             if (window_sum > max_sum)
@@ -117,6 +121,7 @@ int main(int argc, char* argv[]) {
         }
         max_sums[j] = max_sum;
     }
+    /* Ehtesham Faraz end */
 
     if (verbose) {
         printf("Max sliding sums per column:\n");
@@ -127,6 +132,8 @@ int main(int argc, char* argv[]) {
         printf("\n");
     }
 
+    /* Md Fuzail start */
+    /* Count local hotspots */
     int* hotspots_per_row = (int*) calloc(rows, sizeof(int));
     int total_hotspots = 0;
 
@@ -138,6 +145,7 @@ int main(int argc, char* argv[]) {
             unsigned long center = B[i * columns + j];
             int is_hotspot = 1;
 
+            /* Check neighbors (up, down, left, right) */
             if (i > 0 && center <= B[(i - 1) * columns + j])
                 is_hotspot = 0;
             if (is_hotspot && i < rows - 1 && center <= B[(i + 1) * columns + j])
@@ -154,6 +162,7 @@ int main(int argc, char* argv[]) {
         }
         hotspots_per_row[i] = row_count;
     }
+    /* Md Fuzail end */
 
     if (verbose) {
         printf("Hotspots per row:\n");
@@ -161,7 +170,7 @@ int main(int argc, char* argv[]) {
             printf("Row %d: %d hotspot(s)\n", i, hotspots_per_row[i]);
     }
 
-    printf("Total hotspots found: %d\n", total_hotspots);
+    printf("\nTotal hotspots found: %d\n", total_hotspots);
 
     double end_time = omp_get_wtime();
     printf("Execution took %.4f s\n", end_time - start_time);
