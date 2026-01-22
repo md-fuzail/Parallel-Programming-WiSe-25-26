@@ -1,0 +1,159 @@
+pi_tasks Speedup Measurements
+Parameters: num_tasks=10000 lower=10000 upper=1000000 seed=42
+
+Threads: 1
+Average pi: 3.1415926536
+Thread 0 computed 10000 tasks
+Execution took 31.2077 s
+
+Threads: 2
+Average pi: 3.1415926536
+Thread 0 computed 4971 tasks
+Thread 1 computed 5029 tasks
+Execution took 14.2874 s
+
+Threads: 4
+Average pi: 3.1415926536
+Thread 0 computed 2265 tasks
+Thread 1 computed 2640 tasks
+Thread 2 computed 2598 tasks
+Thread 3 computed 2497 tasks
+Execution took 7.4136 s
+
+Threads: 8
+Average pi: 3.1415926536
+Thread 0 computed 1258 tasks
+Thread 1 computed 1291 tasks
+Thread 2 computed 1270 tasks
+Thread 3 computed 1252 tasks
+Thread 4 computed 1240 tasks
+Thread 5 computed 1277 tasks
+Thread 6 computed 1265 tasks
+Thread 7 computed 1147 tasks
+Execution took 3.5975 s
+
+Threads: 16
+Average pi: 3.1415926536
+Thread 0 computed 602 tasks
+Thread 1 computed 629 tasks
+Thread 2 computed 639 tasks
+Thread 3 computed 621 tasks
+Thread 4 computed 575 tasks
+Thread 5 computed 513 tasks
+Thread 6 computed 629 tasks
+Thread 7 computed 632 tasks
+Thread 8 computed 701 tasks
+Thread 9 computed 620 tasks
+Thread 10 computed 614 tasks
+Thread 11 computed 643 tasks
+Thread 12 computed 655 tasks
+Thread 13 computed 659 tasks
+Thread 14 computed 632 tasks
+Thread 15 computed 636 tasks
+Execution took 1.8250 s
+
+Threads: 32
+Average pi: 3.1415926536
+Thread 0 computed 346 tasks
+Thread 1 computed 341 tasks
+Thread 2 computed 181 tasks
+Thread 3 computed 341 tasks
+Thread 4 computed 281 tasks
+Thread 5 computed 372 tasks
+Thread 6 computed 354 tasks
+Thread 7 computed 361 tasks
+Thread 8 computed 354 tasks
+Thread 9 computed 237 tasks
+Thread 10 computed 345 tasks
+Thread 11 computed 342 tasks
+Thread 12 computed 268 tasks
+Thread 13 computed 185 tasks
+Thread 14 computed 340 tasks
+Thread 15 computed 177 tasks
+Thread 16 computed 349 tasks
+Thread 17 computed 345 tasks
+Thread 18 computed 168 tasks
+Thread 19 computed 356 tasks
+Thread 20 computed 349 tasks
+Thread 21 computed 331 tasks
+Thread 22 computed 323 tasks
+Thread 23 computed 333 tasks
+Thread 24 computed 350 tasks
+Thread 25 computed 242 tasks
+Thread 26 computed 304 tasks
+Thread 27 computed 342 tasks
+Thread 28 computed 338 tasks
+Thread 29 computed 339 tasks
+Thread 30 computed 360 tasks
+Thread 31 computed 346 tasks
+Execution took 0.9943 s
+
+Threads: 64
+Average pi: 3.1415926536
+Thread 0 computed 154 tasks
+Thread 1 computed 152 tasks
+Thread 2 computed 154 tasks
+Thread 3 computed 160 tasks
+Thread 4 computed 157 tasks
+Thread 5 computed 154 tasks
+Thread 6 computed 156 tasks
+Thread 7 computed 158 tasks
+Thread 8 computed 156 tasks
+Thread 9 computed 160 tasks
+Thread 10 computed 161 tasks
+Thread 11 computed 150 tasks
+Thread 12 computed 150 tasks
+Thread 13 computed 155 tasks
+Thread 14 computed 154 tasks
+Thread 15 computed 150 tasks
+Thread 16 computed 156 tasks
+Thread 17 computed 157 tasks
+Thread 18 computed 150 tasks
+Thread 19 computed 166 tasks
+Thread 20 computed 149 tasks
+Thread 21 computed 149 tasks
+Thread 22 computed 143 tasks
+Thread 23 computed 161 tasks
+Thread 24 computed 149 tasks
+Thread 25 computed 149 tasks
+Thread 26 computed 165 tasks
+Thread 27 computed 156 tasks
+Thread 28 computed 152 tasks
+Thread 29 computed 151 tasks
+Thread 30 computed 155 tasks
+Thread 31 computed 163 tasks
+Thread 32 computed 169 tasks
+Thread 33 computed 151 tasks
+Thread 34 computed 156 tasks
+Thread 35 computed 163 tasks
+Thread 36 computed 175 tasks
+Thread 37 computed 145 tasks
+Thread 38 computed 166 tasks
+Thread 39 computed 164 tasks
+Thread 40 computed 144 tasks
+Thread 41 computed 141 tasks
+Thread 42 computed 171 tasks
+Thread 43 computed 163 tasks
+Thread 44 computed 156 tasks
+Thread 45 computed 154 tasks
+Thread 46 computed 141 tasks
+Thread 47 computed 164 tasks
+Thread 48 computed 150 tasks
+Thread 49 computed 146 tasks
+Thread 50 computed 155 tasks
+Thread 51 computed 162 tasks
+Thread 52 computed 151 tasks
+Thread 53 computed 152 tasks
+Thread 54 computed 158 tasks
+Thread 55 computed 158 tasks
+Thread 56 computed 157 tasks
+Thread 57 computed 155 tasks
+Thread 58 computed 171 tasks
+Thread 59 computed 162 tasks
+Thread 60 computed 160 tasks
+Thread 61 computed 157 tasks
+Thread 62 computed 171 tasks
+Thread 63 computed 160 tasks
+Execution took 0.9035 s
+
+Measurements Complete

@@ -1,0 +1,53 @@
+heatmap_analysis Speedup Measurements
+Parameters: columns=2048 rows=2048 seed=123 lower=0 upper=100 window_height=1024 verbose=0 work_factor=800
+
+--- Threads: 1 ---
+Starting heatmap_analysis
+Parameters: columns=2048, rows=2048, seed=123, lower=0, upper=100, window_height=1024, verbose=0, num_threads=1, work_factor=800
+
+Total hotspots found: 803741
+Execution took 34.3617 s
+
+--- Threads: 2 ---
+Starting heatmap_analysis
+Parameters: columns=2048, rows=2048, seed=123, lower=0, upper=100, window_height=1024, verbose=0, num_threads=2, work_factor=800
+
+Total hotspots found: 803741
+Execution took 17.1236 s
+
+--- Threads: 4 ---
+Starting heatmap_analysis
+Parameters: columns=2048, rows=2048, seed=123, lower=0, upper=100, window_height=1024, verbose=0, num_threads=4, work_factor=800
+
+Total hotspots found: 803741
+Execution took 8.5929 s
+
+--- Threads: 8 ---
+Starting heatmap_analysis
+Parameters: columns=2048, rows=2048, seed=123, lower=0, upper=100, window_height=1024, verbose=0, num_threads=8, work_factor=800
+
+Total hotspots found: 803741
+Execution took 4.3243 s
+
+--- Threads: 16 ---
+Starting heatmap_analysis
+Parameters: columns=2048, rows=2048, seed=123, lower=0, upper=100, window_height=1024, verbose=0, num_threads=16, work_factor=800
+
+Total hotspots found: 803741
+Execution took 2.1775 s
+
+--- Threads: 32 ---
+Starting heatmap_analysis
+Parameters: columns=2048, rows=2048, seed=123, lower=0, upper=100, window_height=1024, verbose=0, num_threads=32, work_factor=800
+
+Total hotspots found: 803741
+Execution took 1.1054 s
+
+--- Threads: 64 ---
+Starting heatmap_analysis
+Parameters: columns=2048, rows=2048, seed=123, lower=0, upper=100, window_height=1024, verbose=0, num_threads=64, work_factor=800
+
+Total hotspots found: 803741
+Execution took 0.6366 s
+
+Measurements Complete

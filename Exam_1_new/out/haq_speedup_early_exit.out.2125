@@ -1,0 +1,53 @@
+heatmap_analysis_quick Speedup Measurements (Early Exit Enabled)
+Parameters: columns=3 rows=4 seed=42 lower=0 upper=10 window_height=2 verbose=0 work_factor=0
+
+Threads: 1
+Starting heatmap_analysis
+Parameters: columns=3, rows=4, seed=42, lower=0, upper=10, window_height=2, verbose=1, num_threads=1, work_factor=0
+Row 0 contains no hotspots.
+Early exit.
+Execution took 0.0000 s
+
+Threads: 2
+Starting heatmap_analysis
+Parameters: columns=3, rows=4, seed=42, lower=0, upper=10, window_height=2, verbose=1, num_threads=2, work_factor=0
+Row 0 contains no hotspots.
+Early exit.
+Execution took 0.0002 s
+
+Threads: 4
+Starting heatmap_analysis
+Parameters: columns=3, rows=4, seed=42, lower=0, upper=10, window_height=2, verbose=1, num_threads=4, work_factor=0
+Row 1 contains no hotspots.
+Early exit.
+Execution took 0.0004 s
+
+Threads: 8
+Starting heatmap_analysis
+Parameters: columns=3, rows=4, seed=42, lower=0, upper=10, window_height=2, verbose=1, num_threads=8, work_factor=0
+Row 2 contains no hotspots.
+Early exit.
+Execution took 0.0007 s
+
+Threads: 16
+Starting heatmap_analysis
+Parameters: columns=3, rows=4, seed=42, lower=0, upper=10, window_height=2, verbose=1, num_threads=16, work_factor=0
+Row 0 contains no hotspots.
+Early exit.
+Execution took 0.0014 s
+
+Threads: 32
+Starting heatmap_analysis
+Parameters: columns=3, rows=4, seed=42, lower=0, upper=10, window_height=2, verbose=1, num_threads=32, work_factor=0
+Row 0 contains no hotspots.
+Early exit.
+Execution took 0.0027 s
+
+Threads: 64
+Starting heatmap_analysis
+Parameters: columns=3, rows=4, seed=42, lower=0, upper=10, window_height=2, verbose=1, num_threads=64, work_factor=0
+Row 1 contains no hotspots.
+Early exit.
+Execution took 0.0138 s
+
+Measurements Complete

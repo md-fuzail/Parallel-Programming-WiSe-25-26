@@ -37,3 +37,6 @@ copy:
 	scp heatmap_analysis.c heatmap_analysis_quick.c pi_tasks.c \
 	    ha_speedup.sh haq_speedup.sh haq_speedup_early_exit.sh pi_speedup.sh \
 	    Makefile $(SSH_HOST):~
+
+writeback:
+	scp $(SSH_HOST):~/out/* ./out/
