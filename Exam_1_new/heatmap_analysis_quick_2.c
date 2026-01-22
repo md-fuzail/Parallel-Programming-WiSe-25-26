@@ -144,7 +144,37 @@ int main(int argc, char* argv[]) {
        FULL ANALYSIS (same as Task 1.1)
        ========================================================= */
 
-    printf("All rows contain at least one hotspot.\n");
+    int* hotspots_per_row = calloc(rows, sizeof(int));
+    int total_hotspots = 0;
+
+    #pragma omp parallel for reduction(+:total_hotspots) schedule(static)
+    for (int i = 0; i < rows; ++i) {
+        int count = 0;
+
+        for (int j = 0; j < columns; ++j) {
+            unsigned long c = B[i * columns + j];
+            int ok = 1;
+
+            if (i > 0 && c <= B[(i - 1) * columns + j]) ok = 0;
+            if (ok && i < rows - 1 && c <= B[(i + 1) * columns + j]) ok = 0;
+            if (ok && j > 0 && c <= B[i * columns + j - 1]) ok = 0;
+            if (ok && j < columns - 1 && c <= B[i * columns + j + 1]) ok = 0;
+
+            if (ok) {
+                count++;
+                total_hotspots++;
+            }
+        }
+        hotspots_per_row[i] = count;
+    }
+
+    if (verbose) {
+        printf("Hotspots per row:\n");
+        for (int i = 0; i < rows; ++i)
+            printf("Row %d: %d hotspot(s)\n", i, hotspots_per_row[i]);
+    }
+
+    printf("Total hotspots found: %d\n", total_hotspots);
 
     /* ---- Part 1: Sliding window sums ---- */
     unsigned long* max_sums = malloc(columns * sizeof(unsigned long));
