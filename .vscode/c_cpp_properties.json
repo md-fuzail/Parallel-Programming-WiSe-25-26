@@ -1,14 +1,25 @@
 {
     "configurations": [
         {
-            "name": "Mac",
+            "name": "MPI (mpicc)",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/include"
+            ],
+            "defines": [],
+            "compilerPath": "/opt/homebrew/bin/mpicc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64"
+        },
+        {
+            "name": "OpenMP (GCC-15)",
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/homebrew/Cellar/gcc/15.2.0/include/**",
                 "/opt/homebrew/Cellar/gcc/15.2.0/lib/gcc/current/gcc/aarch64-apple-darwin25/15/include/**"
             ],
             "defines": [],
-            "macFrameworkPath": [],
             "compilerPath": "/opt/homebrew/bin/gcc-15",
             "cStandard": "c17",
             "cppStandard": "c++17",
