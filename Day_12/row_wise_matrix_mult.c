@@ -3,7 +3,7 @@
 #include <string.h>
 #include "mpi.h"
 
-#define MATRIX_SIZE 2000
+#define MATRIX_SIZE 8000
 #define SEED 42
 
 double my_rand(unsigned long* state, double lower, double upper)
@@ -91,6 +91,8 @@ int main(int argc, char* argv[])
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Barrier(MPI_COMM_WORLD); 
+    double start_time = MPI_Wtime();
 
     if (rank == 0)
     {
@@ -144,11 +146,12 @@ int main(int argc, char* argv[])
 
         /*printf("Solution: \n");
         printMatrix(matrix_c);*/
+        double end_time = MPI_Wtime();
         printf("Solution lower right corner: %.2f\n", matrix_c[MATRIX_SIZE - 1][MATRIX_SIZE - 1]);
-
         printf("\n=== Timing Results (Rank 0) ===\n");
         printf("Matrix size: %d x %d\n", MATRIX_SIZE, MATRIX_SIZE);
         printf("Number of processes: %d\n", size);
+        printf("Execution time with %d ranks: %.2f s\n", size, end_time - start_time);
         printf("===============================\n");
 
         free(matrix_a);

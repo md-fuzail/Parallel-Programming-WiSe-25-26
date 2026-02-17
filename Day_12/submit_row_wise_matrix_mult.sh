@@ -18,4 +18,4 @@
 #SBATCH --error=/home/fd0002114/out/matmul.err.%j
 
 #cd /path/to/bin
-mpirun -np 4 ./matmul 4 42 1
+mpirun ./row_wise_matrix_mult

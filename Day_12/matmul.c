@@ -1,16 +1,10 @@
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mpi.h"
 
-// Global parameters
-int N;
-int SEED;
-int VERBOSE;
-
-
-double my_rand(unsigned long* state, double lower, double upper)
-{
+// --- HELPER FUNCTIONS ---
+double my_rand(unsigned long* state, double lower, double upper) {
     *state ^= *state >> 12;
     *state ^= *state << 25;
     *state ^= *state >> 27;
@@ -19,192 +13,171 @@ double my_rand(unsigned long* state, double lower, double upper)
     double u = (double)(x >> 11) * inv;
     return lower + (upper - lower) * u;
 }
-
-unsigned long concatenate(unsigned x, unsigned y)
-{
-    unsigned long pow = 10;
-    while (y >= pow)
-        pow *= 10;
-    return x * pow + y;
+unsigned long concatenate(unsigned i, unsigned j) {
+    unsigned pow = 10;
+    while (j >= pow) pow *= 10;
+    return i * pow + j;
 }
 
-void printMatrix(double** arr, const char* name)
-{
+void fillArray(double* data, int n, int value, int seed) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            unsigned long state = concatenate(i, j) + seed + value;
+            data[i * n + j] = my_rand(&state, 0, 1);
+        }
+    }
+}
+
+// Helper to allocate a contiguous matrix
+double* alloc_matrix(int rows, int cols) {
+    double* data = (double*)malloc((size_t)rows * cols * sizeof(double));
+    if (data == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed for size %dx%d\n", rows, cols);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    return data;
+}
+
+void print_matrix(double* mat, int n, const char* name) {
     printf("%s:\n", name);
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < N; j++)
-        {
-            printf("%f ", arr[i][j]);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            printf("%f ", mat[i * n + j]);
         }
         printf("\n");
     }
 }
 
-void fillArray(double** arr, int offset)
-{
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < N; j++)
-        {
-            unsigned long state = concatenate(i, j) + SEED + offset;
-            arr[i][j] = my_rand(&state, 0, 1);
-        }
-    }
-}
+// --- MAIN PROGRAM ---
 
-void multiply_matrices(double* row_a, double* result_row, double** matrix_b)
-{
-    for (int i = 0; i < N; i++)
-    {
-        result_row[i] = 0;
-        for (int j = 0; j < N; j++)
-        {
-            result_row[i] += row_a[j] * matrix_b[j][i];
-        }
-    }
-}
-
-int main(int argc, char* argv[])
-{
-    int rank, size;
-    int ierr;
-    double start_time, end_time;
-
+int main(int argc, char* argv[]) {
+    // 1. Initialize MPI
     MPI_Init(&argc, &argv);
+
+    int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if (argc < 4) {
         if (rank == 0) {
-            printf("Usage: mpirun -np <p> %s <n> <seed> <verbose>\n", argv[0]);
+            fprintf(stderr, "Usage: mpirun -np <p> ./matmul <n> <seed> <verbose>\n");
         }
         MPI_Finalize();
         return 1;
     }
 
-    N = atoi(argv[1]);
-    SEED = atoi(argv[2]);
-    VERBOSE = atoi(argv[3]);
+    int n = atoi(argv[1]);
+    int seed = atoi(argv[2]);
+    int verbose = atoi(argv[3]);
 
-    start_time = MPI_Wtime();
+    // 3. Start Timer (Must include initialization!)
+    MPI_Barrier(MPI_COMM_WORLD); 
+    double start_time = MPI_Wtime();
 
-    double** matrix_a = NULL;
-    double** matrix_b = NULL;
-    double** matrix_c = NULL;
-    double* buffer = NULL;
-    double* answer = NULL;
-
-    // Allocation common to all
-    matrix_b = (double**)malloc(N * sizeof(double*));
-    for (int i = 0; i < N; i++) {
-        matrix_b[i] = (double*)malloc(N * sizeof(double));
-    }
-    answer = (double*)malloc(N * sizeof(double));
-
-    MPI_Status status;
-
-    if (rank == 0) // MASTER
-    {
-        matrix_a = (double**)malloc(N * sizeof(double*));
-        matrix_c = (double**)malloc(N * sizeof(double*));
-        for (int i = 0; i < N; i++) {
-            matrix_a[i] = (double*)malloc(N * sizeof(double));
-            matrix_c[i] = (double*)malloc(N * sizeof(double));
-        }
-
-        fillArray(matrix_a, 0);
-        fillArray(matrix_b, 1);
-
-        if (VERBOSE == 1 && N <= 10) {
-            printMatrix(matrix_a, "Matrix A");
-            printMatrix(matrix_b, "Matrix B");
-        }
-
-        // Broadcast Matrix B
-        for (int i = 0; i < N; i++) {
-            ierr = MPI_Bcast(matrix_b[i], N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        }
-
-        int row_a_counter = 0;
+    // 4. Determine Load Balancing (Scatterv Setup)
+    int* sendcounts = NULL;
+    int* displs = NULL;
+    
+    if (rank == 0) {
+        sendcounts = (int*)malloc(size * sizeof(int));
+        displs = (int*)malloc(size * sizeof(int));
         
-        // Initial dispatch
-        for (int i = 1; i < size; i++)
-        {
-            if (row_a_counter < N) {
-                // Send with tag = row_index + 1
-                ierr = MPI_Send(matrix_a[row_a_counter], N, MPI_DOUBLE, i, row_a_counter + 1, MPI_COMM_WORLD);
-                row_a_counter++;
-            } else {
-                // Send STOP signal (tag 0)
-                ierr = MPI_Send(matrix_b[0], N, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+        int remainder = n % size;
+        int sum = 0;
+        for (int i = 0; i < size; i++) {
+            int rows = n / size;
+            if (i < remainder) {
+                rows++;
+            }
+            sendcounts[i] = rows * n; // Total doubles to send (rows * cols)
+            displs[i] = sum;
+            sum += sendcounts[i];
+        }
+    }
+
+    // Determine my own local height (how many rows do I get?)
+    int my_rows = n / size;
+    if (rank < (n % size)) {
+        my_rows++;
+    }
+
+    // 5. Allocation & Initialization
+    double* mat_a = NULL;
+    double* mat_b = alloc_matrix(n, n); // Everyone needs full B
+    double* mat_c = NULL;               // Only Rank 0 needs full C (initially)
+    
+    // Buffers for local computation
+    double* local_a = alloc_matrix(my_rows, n); 
+    double* local_c = alloc_matrix(my_rows, n);
+    // Initialize local_c to 0.0 to be safe (though logic below overwrites it usually)
+    memset(local_c, 0, (size_t)my_rows * n * sizeof(double));
+
+    if (rank == 0) {
+        mat_a = alloc_matrix(n, n);
+        mat_c = alloc_matrix(n, n);
+
+        fillArray(mat_a, n, 0, seed);
+        fillArray(mat_b, n, 1, seed);
+    }
+
+    // 6. Communication Phase
+
+    // A: Broadcast Full Matrix B to everyone
+    MPI_Bcast(mat_b, n * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    // B: Scatter Matrix A (using Scatterv for irregular row counts)
+    MPI_Scatterv(mat_a, sendcounts, displs, MPI_DOUBLE, 
+                 local_a, my_rows * n, MPI_DOUBLE, 
+                 0, MPI_COMM_WORLD);
+
+    // 7. Computation Phase (Parallel Matrix Multiplication)
+    // C_local = A_local * B
+    // Optimized loop order: i-k-j
+    for (int i = 0; i < my_rows; i++) {
+        for (int k = 0; k < n; k++) {
+            double a_val = local_a[i * n + k];
+            for (int j = 0; j < n; j++) {
+                local_c[i * n + j] += a_val * mat_b[k * n + j];
             }
         }
+    }
 
-        // Receive Loop
-        for (int i = 0; i < N; i++)
-        {
-            ierr = MPI_Recv(answer, N, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            int finished_row = status.MPI_TAG;
-            int sender = status.MPI_SOURCE;
-            
-            memcpy(matrix_c[finished_row], answer, N * sizeof(double));
-
-            if (row_a_counter < N) {
-                ierr = MPI_Send(matrix_a[row_a_counter], N, MPI_DOUBLE, sender, row_a_counter + 1, MPI_COMM_WORLD);
-                row_a_counter++;
-            } else {
-                ierr = MPI_Send(matrix_b[0], N, MPI_DOUBLE, sender, 0, MPI_COMM_WORLD);
-            }
+    // 8. Gather Results
+    MPI_Gatherv(local_c, my_rows * n, MPI_DOUBLE,
+                mat_c, sendcounts, displs, MPI_DOUBLE,
+                0, MPI_COMM_WORLD);
+                
+    // 9. Output & Verification (Rank 0 Only)
+    if (rank == 0) {
+        // CHANGED: Use double, do not cast to unsigned long
+        double checksum = 0.0;
+        for (int i = 0; i < n * n; i++) {
+            checksum += mat_c[i]; 
         }
 
-        if (VERBOSE == 1 && N <= 10) {
-            printMatrix(matrix_c, "Matrix C (Result)");
+        if (verbose == 1 && n <= 10) {
+            print_matrix(mat_a, n, "Matrix A");
+            print_matrix(mat_b, n, "Matrix B");
+            print_matrix(mat_c, n, "Matrix C (Result)");
         }
+        
+        double end_time = MPI_Wtime();
+        double elapsed = end_time - start_time;
 
-        double checksum = 0;
-        for(int i=0; i<N; i++) {
-            for(int j=0; j<N; j++) {
-                checksum += matrix_c[i][j];
-            }
-        }
+        // CHANGED: Print as float (%f)
         printf("Checksum: %f\n", checksum);
+        printf("Execution time with %d ranks: %.2f s\n", size, elapsed);
         
-        end_time = MPI_Wtime();
-        printf("Execution time with %d ranks: %.2f s\n", size, end_time - start_time);
-
-        // Cleanup Master
-        for (int i=0; i<N; i++) { free(matrix_a[i]); free(matrix_c[i]); }
-        free(matrix_a); free(matrix_c);
+        free(mat_a);
+        free(mat_c);
+        free(sendcounts);
+        free(displs);
     }
-    else // WORKER
-    {
-        buffer = (double*)malloc(N * sizeof(double));
-
-        // Receive Matrix B
-        for (int i = 0; i < N; i++) {
-            ierr = MPI_Bcast(matrix_b[i], N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        }
-
-        while (1)
-        {
-            ierr = MPI_Recv(buffer, N, MPI_DOUBLE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            int tag = status.MPI_TAG;
-
-            if (tag == 0) break; // STOP
-
-            int row = tag - 1;
-            multiply_matrices(buffer, answer, matrix_b);
-            
-            // Send back using actual row index as tag
-            ierr = MPI_Send(answer, N, MPI_DOUBLE, 0, row, MPI_COMM_WORLD);
-        }
-        free(buffer);
-    }
-
-    for (int i=0; i<N; i++) free(matrix_b[i]);
-    free(matrix_b);
-    free(answer);
+    
+    // Cleanup
+    free(mat_b);
+    free(local_a);
+    free(local_c);
 
     MPI_Finalize();
     return 0;
