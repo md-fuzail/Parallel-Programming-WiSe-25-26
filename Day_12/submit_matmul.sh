@@ -18,4 +18,5 @@
 #SBATCH --error=/home/fd0002114/out/matmul.err.%j
 
 #cd /path/to/bin
+cd /home/fd0002114/out
 mpirun -np 4 ./matmul 4 42 1

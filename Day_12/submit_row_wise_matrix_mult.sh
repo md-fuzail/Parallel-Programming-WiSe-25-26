@@ -18,4 +18,5 @@
 #SBATCH --error=/home/fd0002114/out/row_wise_matrix_mult.err.%j
 
 #cd /path/to/bin
+cd /home/fd0002114/out
 mpirun ./row_wise_matrix_mult
