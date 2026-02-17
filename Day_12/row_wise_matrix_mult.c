@@ -3,7 +3,7 @@
 #include <string.h>
 #include "mpi.h"
 
-#define MATRIX_SIZE 8000
+#define MATRIX_SIZE 2000
 #define SEED 42
 
 double my_rand(unsigned long* state, double lower, double upper)
