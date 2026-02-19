@@ -1,0 +1,45 @@
+==================================================
+Starting Speedup Benchmark on 4 Nodes
+Matrix Size: 8000, Seed: 42, Verbose: 0
+==================================================
+--- Run 1 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.88 s
+
+--- Run 2 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.86 s
+
+--- Run 3 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.59 s
+
+--- Run 4 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.55 s
+
+--- Run 5 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.55 s
+
+--- Run 6 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.70 s
+
+--- Run 7 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.85 s
+
+--- Run 8 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 13.00 s
+
+--- Run 9 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.70 s
+
+--- Run 10 ---
+Checksum: 127994455599.950012
+Execution time with 256 ranks: 12.61 s
+
+Benchmark Complete.
