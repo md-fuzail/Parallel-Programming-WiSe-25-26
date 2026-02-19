@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 double my_rand(unsigned long* state, double lower, double upper) {
     *state ^= *state >> 12;
@@ -122,6 +123,8 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < n * n; i++) {
             checksum += mat_c[i]; 
         }
+        
+        checksum = fmod(checksum, 18446744073709551616.0);
 
         // Print matrices for debugging small dimensions
         if (verbose == 1 && n <= 10) {
