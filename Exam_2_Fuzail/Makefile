@@ -11,7 +11,7 @@ clean:
 	rm -rf ~/out/*
 
 compile:
-	mpicc -O3 matmulc.c -o matmul -lm
+	mpicc -O3 matmul.c -o matmul -lm
 
 speedup: compile
 	sbatch speedup_1node.sh
