@@ -24,7 +24,6 @@ echo "Starting Speedup Benchmark on $SLURM_JOB_NUM_NODES Nodes"
 echo "Matrix Size: 8000, Seed: 42, Verbose: 0"
 echo "=================================================="
 
-# Run the program 5 times to calculate an average
 for i in {1..10}
 do
     echo "--- Run $i ---"
