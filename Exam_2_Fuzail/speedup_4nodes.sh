@@ -24,7 +24,7 @@ echo "Starting Speedup Benchmark on $SLURM_JOB_NUM_NODES Nodes"
 echo "Matrix Size: 8000, Seed: 42, Verbose: 0"
 echo "=================================================="
 
-for i in {1..5}
+for i in {1..10}
 do
     echo "--- Run $i ---"
     mpirun ./matmul 8000 42 0
