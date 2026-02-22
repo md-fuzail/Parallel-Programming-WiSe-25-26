@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CS 420: Parallel Programming</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #f4f6fa; --surface: #ffffff; --surface-2: #eef1f7; --border: #d8dde8;
+            --text: #1a1f2e; --text-muted: #6b7694;
+            --accent: #2563eb; --accent-dark: #1d4ed8; --accent-light: #dbeafe;
+            --green: #16a34a; --green-bg: #dcfce7;
+            --amber: #d97706; --amber-bg: #fef3c7;
+            --purple: #7c3aed; --purple-bg: #ede9fe;
+            --red: #dc2626; --red-bg: #fee2e2;
+            --cyan: #0891b2; --cyan-bg: #cffafe;
+            --code-bg: #f8fafc; --code-border: #e2e8f0;
+            --kw: #2563eb; --ty: #0891b2; --fn: #7c3aed; --str: #16a34a;
+            --cm: #94a3b8; --pp: #d97706; --nm: #dc2626;
+            --hl-bg: #fef9c3; --hl-border: #eab308;
+            --t0: #2563eb; --t0-bg: #dbeafe;
+            --t1: #7c3aed; --t1-bg: #ede9fe;
+            --t2: #d97706; --t2-bg: #fef3c7;
+            --t3: #16a34a; --t3-bg: #dcfce7;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        .breadcrumb-bar { padding: 12px 28px 0; display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--text-muted); }
+        .breadcrumb-bar a { color: var(--text-muted); text-decoration: none; }
+        .breadcrumb-bar a:hover { color: var(--accent); }
+        .breadcrumb-bar .crumb-active { color: var(--accent); font-weight: 600; }
+        .breadcrumb-bar .sep { font-size: 12px; }
+        .title-row { padding: 8px 28px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .page-title { font-size: 34px; font-weight: 800; letter-spacing: -.4px; color: var(--text); }
+        .page-title .accent { color: var(--accent); }
+        .speaker-badge { display: flex; align-items: center; gap: 8px; padding: 7px 16px 7px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; font-size: 15px; font-weight: 700; color: var(--text); }
+        .speaker-dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 0 3px var(--green-bg); }
+        .content { flex: 1; display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; padding: 0 28px 28px; }
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+        .panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; background: var(--surface-2); }
+        .panel-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+        .obj-item { display: flex; gap: 14px; }
+        .obj-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .obj-content { flex: 1; }
+        .obj-label { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+        .obj-desc { font-size: 15px; color: var(--text-muted); line-height: 1.55; }
+        .divider { height: 1px; background: var(--border); }
+        .inline-code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; background: var(--surface-2); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--purple); }
+
+        /* allgatherv flow diagram */
+        .flow-wrap { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+        .flow-label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; }
+        .flow-legend { display: flex; gap: 14px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+        .ranks-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .rank-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .rank-title { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+        .rank-before { width: 100%; border: 1px dashed var(--border); border-radius: 6px; padding: 4px; display: flex; flex-direction: column; gap: 3px; min-height: 64px; justify-content: center; }
+        .rank-slice { border-radius: 4px; padding: 5px 8px; font-size: 11px; font-weight: 700; font-family: monospace; text-align: center; }
+        .rank-after { width: 100%; border: 2px solid var(--green); border-radius: 6px; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+
+        .arrow-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .op-badge { display: flex; align-items: center; gap: 8px; background: var(--accent-light); border: 1px solid var(--accent); border-radius: 8px; padding: 7px 16px; font-size: 14px; font-weight: 700; color: var(--accent); }
+        .op-arrow { font-size: 20px; color: var(--accent); }
+
+        /* code panel */
+        .code-panel { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+        .code-header { padding: 10px 16px; border-bottom: 1px solid var(--code-border); display: flex; align-items: center; gap: 10px; background: var(--surface); }
+        .code-dots { display: flex; gap: 7px; }
+        .dot { width: 13px; height: 13px; border-radius: 50%; }
+        .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
+        .code-filename { font-family: monospace; font-size: 15px; color: var(--text-muted); }
+        .code-body { flex: 1; overflow: auto; }
+        .code-pre { font-family: "SFMono-Regular", Consolas, monospace; font-size: 14px; line-height: 1.7; white-space: pre; padding: 10px 0; margin: 0; }
+        .code-pre .line { display: block; padding: 0 14px 0 18px; }
+        .code-pre .hl { background: var(--hl-bg); border-left: 3px solid var(--hl-border); padding-left: 15px; }
+        .kw { color: var(--kw); font-weight: 600; } .ty { color: var(--ty); } .fn { color: var(--fn); }
+        .cm { color: var(--cm); font-style: italic; } .pp { color: var(--pp); font-weight: 600; } .nm { color: var(--nm); }
+
+        /* insight banner */
+        .insight { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; background: var(--accent-light); border: 1px solid #93c5fd; border-radius: 10px; }
+        .insight-title { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
+        .insight-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+        /* tradeoff list */
+        .tradeoff-item { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+        .tradeoff-item .tc { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+
+        .footer { height: 44px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; font-size: 14px; color: var(--text-muted); flex-shrink: 0; }
+    </style>
+</head>
+<body>
+    <div class="breadcrumb-bar" style="margin-bottom:10px">
+        <a href="#">Exam 2</a><span class="sep">›</span>
+        <a href="#">Task 1</a><span class="sep">›</span>
+        <a href="#">Approach A</a><span class="sep">›</span>
+        <span class="crumb-active">Communication Strategy</span>
+    </div>
+    <div class="title-row">
+        <h1 class="page-title">Slide 3: <span class="accent">Communication — MPI_Allgatherv</span></h1>
+        <div class="speaker-badge"><div class="speaker-dot"></div> Speaker: Ehtesham Faraz</div>
+    </div>
+
+    <div class="content">
+        <!-- LEFT: Visualization + Code -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="panel" style="flex:1">
+                <div class="panel-header">
+                    📡&nbsp; Collective Operation Flow
+                    <span style="margin-left:auto;font-size:14px;font-weight:400;color:var(--text-muted)">Gathering partial slices into full replicas</span>
+                </div>
+                <div class="panel-body">
+                    <div class="flow-legend">
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--t0)"></div> Rank 0 slice</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--t1)"></div> Rank 1 slice</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--t2)"></div> Rank 2 slice</div>
+                    </div>
+
+                    <!-- BEFORE -->
+                    <div>
+                        <div class="flow-label" style="margin-bottom:8px">Before — each rank holds only its slice of B</div>
+                        <div class="ranks-row">
+                            <div class="rank-col">
+                                <div class="rank-title">Rank 0</div>
+                                <div class="rank-before">
+                                    <div class="rank-slice" style="background:var(--t0-bg);color:var(--t0)">Slice 0</div>
+                                </div>
+                            </div>
+                            <div class="rank-col">
+                                <div class="rank-title">Rank 1</div>
+                                <div class="rank-before">
+                                    <div class="rank-slice" style="background:var(--t1-bg);color:var(--t1)">Slice 1</div>
+                                </div>
+                            </div>
+                            <div class="rank-col">
+                                <div class="rank-title">Rank 2</div>
+                                <div class="rank-before">
+                                    <div class="rank-slice" style="background:var(--t2-bg);color:var(--t2)">Slice 2</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="arrow-row">
+                        <div class="op-arrow">↓</div>
+                        <div class="op-badge">⇅&nbsp; MPI_ALLGATHERV</div>
+                        <div class="op-arrow">↓</div>
+                    </div>
+
+                    <!-- AFTER -->
+                    <div>
+                        <div class="flow-label" style="margin-bottom:8px">After — every rank has the full matrix B</div>
+                        <div class="ranks-row">
+                            <div class="rank-col">
+                                <div class="rank-title">Rank 0 (Full B)</div>
+                                <div class="rank-after">
+                                    <div class="rank-slice" style="background:var(--t0-bg);color:var(--t0)">Slice 0</div>
+                                    <div class="rank-slice" style="background:var(--t1-bg);color:var(--t1)">Slice 1</div>
+                                    <div class="rank-slice" style="background:var(--t2-bg);color:var(--t2)">Slice 2</div>
+                                </div>
+                            </div>
+                            <div class="rank-col">
+                                <div class="rank-title">Rank 1 (Full B)</div>
+                                <div class="rank-after">
+                                    <div class="rank-slice" style="background:var(--t0-bg);color:var(--t0)">Slice 0</div>
+                                    <div class="rank-slice" style="background:var(--t1-bg);color:var(--t1)">Slice 1</div>
+                                    <div class="rank-slice" style="background:var(--t2-bg);color:var(--t2)">Slice 2</div>
+                                </div>
+                            </div>
+                            <div class="rank-col">
+                                <div class="rank-title">Rank 2 (Full B)</div>
+                                <div class="rank-after">
+                                    <div class="rank-slice" style="background:var(--t0-bg);color:var(--t0)">Slice 0</div>
+                                    <div class="rank-slice" style="background:var(--t1-bg);color:var(--t1)">Slice 1</div>
+                                    <div class="rank-slice" style="background:var(--t2-bg);color:var(--t2)">Slice 2</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight">
+                        <span style="font-size:20px;flex-shrink:0">💡</span>
+                        <div>
+                            <div class="insight-title">Implementation Insight</div>
+                            <div class="insight-desc">Decoupling communication from computation: completing data replication up-front lets the subsequent O(N³) matrix multiply proceed with zero network latency.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code -->
+            <div class="code-panel">
+                <div class="code-header">
+                    <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+                    <span style="font-size:14px;color:var(--text-muted)">&#x3C;/&#x3E;</span>
+                    <span class="code-filename">mpi_matmul.c — communication</span>
+                </div>
+                <div class="code-body">
+                    <!-- prettier-ignore -->
+                    <pre class="code-pre"><span class="line"><span class="cm">/* Gather all B slices → full B on every rank */</span></span><span class="line hl"><span class="fn">MPI_Allgatherv</span>(local_B_slice, my_rows * n, <span class="pp">MPI_DOUBLE</span>,</span><span class="line hl">               B, recvcounts, displs, <span class="pp">MPI_DOUBLE</span>,</span><span class="line hl">               <span class="pp">MPI_COMM_WORLD</span>);</span><span class="line"><span class="fn">free</span>(local_B_slice); <span class="cm">/* no longer needed */</span></span><span class="line"> </span><span class="line"><span class="cm">/* Gather result slices → full C on Rank 0 */</span></span><span class="line hl"><span class="fn">MPI_Gatherv</span>(local_C, my_rows * n, <span class="pp">MPI_DOUBLE</span>,</span><span class="line hl">            C, recvcounts, displs, <span class="pp">MPI_DOUBLE</span>,</span><span class="line hl">            <span class="nm">0</span>, <span class="pp">MPI_COMM_WORLD</span>);</span></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Strategy Details -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="panel">
+                <div class="panel-header">📋&nbsp; Strategy Details</div>
+                <div class="panel-body">
+                    <div style="font-size:14px;color:var(--text-muted);font-weight:600">Matrix B Replication Logic</div>
+                    <div class="obj-item">
+                        <div class="obj-icon" style="background:var(--red-bg)">⚠️</div>
+                        <div class="obj-content">
+                            <div class="obj-label">Requirement</div>
+                            <div class="obj-desc">Every rank must possess a complete copy of Matrix B to compute its row slice of result Matrix C.</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="obj-item">
+                        <div class="obj-icon" style="background:var(--accent-light)">⚡</div>
+                        <div class="obj-content">
+                            <div class="obj-label">Solution</div>
+                            <div class="obj-desc"><span class="inline-code">MPI_Allgatherv</span> is used. Each rank initialises a unique slice of B, then the collective operation broadcasts all slices to all ranks simultaneously.</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="obj-item">
+                        <div class="obj-icon" style="background:var(--amber-bg)">⚖️</div>
+                        <div class="obj-content">
+                            <div class="obj-label">Trade-off Analysis</div>
+                            <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+                                <div class="tradeoff-item">
+                                    <span class="tc">✅</span>
+                                    <span><strong>Pro:</strong> Zero communication during the main compute phase.</span>
+                                </div>
+                                <div class="tradeoff-item">
+                                    <span class="tc">⚠️</span>
+                                    <span><strong>Con:</strong> Memory per node scales as O(N²). Acceptable for N≤8000 (~500 MB).</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- recvcounts / displs -->
+            <div class="panel" style="flex:1">
+                <div class="panel-header">📐&nbsp; Variable-Size Displacement</div>
+                <div class="panel-body">
+                    <div class="obj-desc">Because N may not divide evenly by P, <span class="inline-code">MPI_Allgatherv</span> and <span class="inline-code">MPI_Gatherv</span> use per-rank <span class="inline-code">recvcounts</span> and <span class="inline-code">displs</span> arrays.</div>
+                    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                        <div style="display:grid;grid-template-columns:auto 1fr 1fr;font-size:13px;font-weight:700;background:var(--border);padding:7px 12px;color:var(--text-muted);gap:12px">
+                            <span>Rank</span><span>recvcounts[i]</span><span>displs[i]</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:auto 1fr 1fr;font-size:13px;gap:12px">
+                            <div style="padding:7px 12px;background:var(--t0-bg);color:var(--t0);font-weight:700;border-bottom:1px solid var(--border)">0</div>
+                            <div style="padding:7px 0;color:var(--text-muted);font-family:monospace;border-bottom:1px solid var(--border)">rows₀ × n</div>
+                            <div style="padding:7px 0;color:var(--text-muted);font-family:monospace;border-bottom:1px solid var(--border)">0</div>
+                            <div style="padding:7px 12px;background:var(--t1-bg);color:var(--t1);font-weight:700;border-bottom:1px solid var(--border)">1</div>
+                            <div style="padding:7px 0;color:var(--text-muted);font-family:monospace;border-bottom:1px solid var(--border)">rows₁ × n</div>
+                            <div style="padding:7px 0;color:var(--text-muted);font-family:monospace;border-bottom:1px solid var(--border)">rows₀×n</div>
+                            <div style="padding:7px 12px;background:var(--t2-bg);color:var(--t2);font-weight:700">···</div>
+                            <div style="padding:7px 0;color:var(--text-muted);font-family:monospace">···</div>
+                            <div style="padding:7px 0;color:var(--text-muted);font-family:monospace">···</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <span>Parallel Programming &nbsp;&bull;&nbsp; Ehtesham Faraz/Md Fuzail</span>
+    </footer>
+</body>
+</html>

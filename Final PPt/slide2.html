@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CS 420: Parallel Programming</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #f4f6fa;
+            --surface: #ffffff;
+            --surface-2: #eef1f7;
+            --border: #d8dde8;
+            --text: #1a1f2e;
+            --text-muted: #6b7694;
+            --accent: #2563eb;
+            --accent-dark: #1d4ed8;
+            --accent-light: #dbeafe;
+            --green: #16a34a;
+            --green-bg: #dcfce7;
+            --amber: #d97706;
+            --amber-bg: #fef3c7;
+            --purple: #7c3aed;
+            --purple-bg: #ede9fe;
+            --red: #dc2626;
+            --red-bg: #fee2e2;
+            --cyan: #0891b2;
+            --cyan-bg: #cffafe;
+            --code-bg: #f8fafc;
+            --code-border: #e2e8f0;
+            --kw: #2563eb;
+            --ty: #0891b2;
+            --fn: #7c3aed;
+            --str: #16a34a;
+            --cm: #94a3b8;
+            --pp: #d97706;
+            --nm: #dc2626;
+            --hl-bg: #fef9c3;
+            --hl-border: #eab308;
+            --hl2-bg: #ede9fe;
+            --hl2-border: #7c3aed;
+            /* thread colours */
+            --t0: #2563eb;
+            --t0-bg: #dbeafe;
+            --t1: #7c3aed;
+            --t1-bg: #ede9fe;
+            --t2: #d97706;
+            --t2-bg: #fef3c7;
+            --t3: #16a34a;
+            --t3-bg: #dcfce7;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── BREADCRUMB ──────────────────────────────────────────── */
+        .breadcrumb-bar {
+            padding: 12px 28px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb-bar a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .breadcrumb-bar a:hover {
+            color: var(--accent);
+        }
+
+        .breadcrumb-bar .crumb-active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .breadcrumb-bar .sep {
+            font-size: 12px;
+        }
+
+        /* ── PAGE TITLE ROW ──────────────────────────────────────── */
+        .title-row {
+            padding: 8px 28px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-title {
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: var(--text);
+        }
+
+        .page-title .accent {
+            color: var(--accent);
+        }
+
+        .speaker-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px 7px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.04em;
+        }
+
+        .speaker-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px var(--green-bg);
+        }
+
+        /* ── MAIN CONTENT ────────────────────────────────────────── */
+        .content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.4fr 1fr;
+            gap: 16px;
+            padding: 0 28px 28px;
+            min-height: 0;
+        }
+
+        /* ── PANELS ──────────────────────────────────────────────── */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 17px;
+            font-weight: 700;
+            background: var(--surface-2);
+        }
+
+        .panel-body {
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            flex: 1;
+        }
+
+        /* ── STRATEGY ITEMS ──────────────────────────────────────── */
+        .obj-item {
+            display: flex;
+            gap: 14px;
+        }
+
+        .obj-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .obj-content {
+            flex: 1;
+        }
+
+        .obj-label {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .obj-desc {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.55;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 11px;
+            border-radius: 6px;
+            font-family: "SFMono-Regular", Consolas, monospace;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--accent);
+        }
+
+        .tag-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ── CODE PANEL ──────────────────────────────────────────── */
+        .code-panel {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .code-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--code-border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface);
+        }
+
+        .code-dots {
+            display: flex;
+            gap: 7px;
+        }
+
+        .dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+        }
+
+        .dot-r { background: #ff5f57; }
+        .dot-y { background: #febc2e; }
+        .dot-g { background: #28c840; }
+
+        .code-filename {
+            font-family: "SFMono-Regular", Consolas, monospace;
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        .code-icon {
+            font-size: 16px;
+            margin-right: 2px;
+        }
+
+        .code-body {
+            flex: 1;
+            overflow: auto;
+        }
+
+        .code-pre {
+            font-family: "SFMono-Regular", Consolas, monospace;
+            font-size: 15px;
+            line-height: 1.7;
+            white-space: pre;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .code-pre .line {
+            display: block;
+            padding: 0 16px 0 22px;
+        }
+
+        .code-pre .hl1 {
+            background: var(--hl-bg);
+            border-left: 3px solid var(--hl-border);
+            padding-left: 19px;
+        }
+
+        .code-pre .hl2 {
+            background: var(--hl2-bg);
+            border-left: 3px solid var(--hl2-border);
+            padding-left: 19px;
+        }
+
+        /* syntax colours */
+        .kw { color: var(--kw); font-weight: 600; }
+        .ty { color: var(--ty); }
+        .fn { color: var(--fn); }
+        .st { color: var(--str); }
+        .cm { color: var(--cm); font-style: italic; }
+        .pp { color: var(--pp); font-weight: 600; }
+        .nm { color: var(--nm); }
+
+        /* ── TASK TREE PANEL ─────────────────────────────────────── */
+        .tree-badge {
+            margin-left: auto;
+            padding: 3px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .tree-legend {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .tree-wrap {
+            flex: 1;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── TASK STATS ──────────────────────────────────────────── */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .stat-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ── FOOTER ──────────────────────────────────────────────── */
+        .footer {
+            height: 44px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            font-size: 14px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb-bar" style="margin-bottom: 10px;">
+        <a href="#">Exam 1</a>
+        <span class="sep">›</span>
+        <a href="#">Task 3</a>
+        <span class="sep">›</span>
+        <span class="crumb-active">Pi Tasks</span>
+    </div>
+
+    <!-- TITLE ROW -->
+    <div class="title-row">
+        <h1 class="page-title">Slide 1:– <span class="accent">OpenMP Task Parallelism</span></h1>
+        <div class="speaker-badge">
+            <div class="speaker-dot"></div>
+            Speaker: Ehtesham Faraz
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="content">
+
+        <!-- LEFT: Strategy Overview -->
+        <div class="panel">
+            <div class="panel-header">🔷&nbsp; Strategy Overview</div>
+            <div class="panel-body">
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--red-bg)">🔴</div>
+                    <div class="obj-content">
+                        <div class="obj-label">Problem</div>
+                        <div class="obj-desc">Compute π via numerical integration using a dynamic, load-imbalanced recursive task tree.</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--cyan-bg)">⚡</div>
+                    <div class="obj-content">
+                        <div class="obj-label">Approach</div>
+                        <div class="obj-desc">OpenMP task parallelism — one thread seeds the recursion via <code style="font-size:13px;background:var(--surface-2);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">#pragma omp single</code>; all threads steal tasks from the pool.</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--amber-bg)">🌿</div>
+                    <div class="obj-content">
+                        <div class="obj-label">Recursion</div>
+                        <div class="obj-desc">Each task computes π over random steps, then spawns <strong>1–4 child tasks</strong> until <code style="font-size:13px;background:var(--surface-2);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">g_num_tasks</code> is reached.</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--purple-bg)">🔗</div>
+                    <div class="obj-content">
+                        <div class="obj-label">Atomics</div>
+                        <div class="obj-desc">Thread-safe accumulation of <code style="font-size:13px;background:var(--surface-2);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">pi_sum</code> and per-thread counters; unique task IDs via <code style="font-size:13px;background:var(--surface-2);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">atomic capture</code>.</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--green-bg)">✅</div>
+                    <div class="obj-content">
+                        <div class="obj-label">Key Pragmas</div>
+                        <div class="tag-row">
+                            <span class="tag">#pragma omp task</span>
+                            <span class="tag">#pragma omp single</span>
+                            <span class="tag">#pragma omp atomic</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- MIDDLE: Code -->
+        <div class="code-panel">
+            <div class="code-header">
+                <div class="code-dots">
+                    <div class="dot dot-r"></div>
+                    <div class="dot dot-y"></div>
+                    <div class="dot dot-g"></div>
+                </div>
+                <span class="code-icon">&#x3C;&#x2F;&#x3E;</span>
+                <span class="code-filename">pi_tasks.c</span>
+            </div>
+            <div class="code-body">
+                <!-- prettier-ignore -->
+                <pre class="code-pre"><span class="line"><span class="cm">/* Entry point — one thread seeds the whole tree */</span></span><span class="line hl1"><span class="pp">#pragma</span> <span class="kw">omp parallel</span></span><span class="line">{</span><span class="line hl1">    <span class="pp">#pragma</span> <span class="kw">omp single</span></span><span class="line">    {</span><span class="line">        total_tasks_created = <span class="nm">1</span>;</span><span class="line hl1">        <span class="pp">#pragma</span> <span class="kw">omp task</span> firstprivate(seed)</span><span class="line">        <span class="fn">pi_task</span>(seed);</span><span class="line">    }</span><span class="line">}</span><span class="line"> </span><span class="line"><span class="cm">/* Inside pi_task() — runs on any thread */</span></span><span class="line"><span class="ty">int</span> tid = <span class="fn">omp_get_thread_num</span>();</span><span class="line hl2"><span class="pp">#pragma</span> <span class="kw">omp atomic</span></span><span class="line">tasks_per_thread[tid]++;</span><span class="line"> </span><span class="line"><span class="ty">double</span> pi = <span class="fn">compute_pi</span>(steps);</span><span class="line hl2"><span class="pp">#pragma</span> <span class="kw">omp atomic</span></span><span class="line">pi_sum += pi;</span><span class="line"> </span><span class="line"><span class="cm">/* Spawn children if budget remains */</span></span><span class="line"><span class="kw">for</span> (<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; spawn_count; i++) {</span><span class="line hl2">    <span class="pp">#pragma</span> <span class="kw">omp atomic capture</span></span><span class="line">    { my_task_id = total_tasks_created; total_tasks_created++; }</span><span class="line">    <span class="kw">if</span> (my_task_id &lt; g_num_tasks) {</span><span class="line hl1">        <span class="pp">#pragma</span> <span class="kw">omp task</span> firstprivate(child_seed)</span><span class="line">        <span class="fn">pi_task</span>(child_seed);</span><span class="line">    } <span class="kw">else</span> <span class="kw">break</span>;</span><span class="line">}</span></pre>
+            </div>
+        </div>
+
+        <!-- RIGHT: Task Tree Visualization -->
+        <div class="panel">
+            <div class="panel-header">
+                🌲&nbsp; Task Tree
+            </div>
+            <div class="panel-body">
+
+                <div class="tree-legend">
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--t0)"></div> T0</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--t1)"></div> T1</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--t2)"></div> T2</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--t3)"></div> T3</div>
+                </div>
+
+                <!-- SVG Task Tree -->
+                <div class="tree-wrap">
+                    <svg viewBox="0 0 260 210" width="100%" style="max-height:200px">
+                        <!-- Lines (drawn behind nodes) -->
+                        <!-- Root → L1 -->
+                        <line x1="130" y1="28" x2="52"  y2="72" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="130" y1="28" x2="130" y2="72" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="130" y1="28" x2="208" y2="72" stroke="#d8dde8" stroke-width="1.5"/>
+                        <!-- L1-left → L2 -->
+                        <line x1="52"  y1="88" x2="26"  y2="132" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="52"  y1="88" x2="60"  y2="132" stroke="#d8dde8" stroke-width="1.5"/>
+                        <!-- L1-mid → L2 -->
+                        <line x1="130" y1="88" x2="104" y2="132" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="130" y1="88" x2="130" y2="132" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="130" y1="88" x2="156" y2="132" stroke="#d8dde8" stroke-width="1.5"/>
+                        <!-- L1-right → L2 -->
+                        <line x1="208" y1="88" x2="196" y2="132" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="208" y1="88" x2="222" y2="132" stroke="#d8dde8" stroke-width="1.5"/>
+                        <!-- L2 → L3 (a few) -->
+                        <line x1="26"  y1="148" x2="14"  y2="186" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="26"  y1="148" x2="34"  y2="186" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="104" y1="148" x2="92"  y2="186" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="104" y1="148" x2="116" y2="186" stroke="#d8dde8" stroke-width="1.5"/>
+                        <line x1="156" y1="148" x2="148" y2="186" stroke="#d8dde8" stroke-width="1.5"/>
+
+                        <!-- Level 0: Root -->
+                        <circle cx="130" cy="18" r="14" fill="#2563eb"/>
+                        <text x="130" y="22" text-anchor="middle" fill="white" font-size="9" font-weight="700" font-family="sans-serif">T0</text>
+
+                        <!-- Level 1 -->
+                        <circle cx="52"  cy="80" r="13" fill="#7c3aed"/>
+                        <text x="52"  y="84" text-anchor="middle" fill="white" font-size="9" font-weight="700" font-family="sans-serif">T1</text>
+
+                        <circle cx="130" cy="80" r="13" fill="#d97706"/>
+                        <text x="130" y="84" text-anchor="middle" fill="white" font-size="9" font-weight="700" font-family="sans-serif">T2</text>
+
+                        <circle cx="208" cy="80" r="13" fill="#16a34a"/>
+                        <text x="208" y="84" text-anchor="middle" fill="white" font-size="9" font-weight="700" font-family="sans-serif">T3</text>
+
+                        <!-- Level 2 -->
+                        <circle cx="26"  cy="140" r="11" fill="#2563eb"/>
+                        <text x="26"  y="144" text-anchor="middle" fill="white" font-size="8" font-weight="700" font-family="sans-serif">T0</text>
+
+                        <circle cx="60"  cy="140" r="11" fill="#7c3aed"/>
+                        <text x="60"  y="144" text-anchor="middle" fill="white" font-size="8" font-weight="700" font-family="sans-serif">T1</text>
+
+                        <circle cx="104" cy="140" r="11" fill="#16a34a"/>
+                        <text x="104" y="144" text-anchor="middle" fill="white" font-size="8" font-weight="700" font-family="sans-serif">T3</text>
+
+                        <circle cx="130" cy="140" r="11" fill="#d97706"/>
+                        <text x="130" y="144" text-anchor="middle" fill="white" font-size="8" font-weight="700" font-family="sans-serif">T2</text>
+
+                        <circle cx="156" cy="140" r="11" fill="#2563eb"/>
+                        <text x="156" y="144" text-anchor="middle" fill="white" font-size="8" font-weight="700" font-family="sans-serif">T0</text>
+
+                        <circle cx="196" cy="140" r="11" fill="#7c3aed"/>
+                        <text x="196" y="144" text-anchor="middle" fill="white" font-size="8" font-weight="700" font-family="sans-serif">T1</text>
+
+                        <circle cx="222" cy="140" r="11" fill="#16a34a"/>
+                        <text x="222" y="144" text-anchor="middle" fill="white" font-size="8" font-weight="700" font-family="sans-serif">T3</text>
+
+                        <!-- Level 3 (leaf samples) -->
+                        <circle cx="14"  cy="194" r="9" fill="#d97706" opacity=".85"/>
+                        <text x="14"  y="197" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="sans-serif">T2</text>
+
+                        <circle cx="34"  cy="194" r="9" fill="#2563eb" opacity=".85"/>
+                        <text x="34"  y="197" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="sans-serif">T0</text>
+
+                        <circle cx="92"  cy="194" r="9" fill="#7c3aed" opacity=".85"/>
+                        <text x="92"  y="197" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="sans-serif">T1</text>
+
+                        <circle cx="116" cy="194" r="9" fill="#16a34a" opacity=".85"/>
+                        <text x="116" y="197" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="sans-serif">T3</text>
+
+                        <circle cx="148" cy="194" r="9" fill="#d97706" opacity=".85"/>
+                        <text x="148" y="197" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="sans-serif">T2</text>
+
+                        <!-- "..." label indicating more nodes -->
+                        <text x="178" cy="194" y="198" fill="#94a3b8" font-size="11" font-family="sans-serif">···</text>
+                    </svg>
+                </div>
+
+                <!-- Runtime stats -->
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Avg π estimate</div>
+                        <div class="stat-value">3.1416</div>
+                        <div class="stat-sub">converges with steps</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Spawn fanout</div>
+                        <div class="stat-value">1 – 4</div>
+                        <div class="stat-sub">children per task</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Synchronisation</div>
+                        <div class="stat-value" style="font-size:15px;padding-top:2px">atomic</div>
+                        <div class="stat-sub">pi_sum &amp; counters</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <span>Parallel Programming &nbsp;&bull;&nbsp; Ehtesham Faraz/Md Fuzail</span>
+    </footer>
+
+</body>
+
+</html>

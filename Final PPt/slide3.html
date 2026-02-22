@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CS 420: Parallel Programming</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #f4f6fa; --surface: #ffffff; --surface-2: #eef1f7; --border: #d8dde8;
+            --text: #1a1f2e; --text-muted: #6b7694;
+            --accent: #2563eb; --accent-dark: #1d4ed8; --accent-light: #dbeafe;
+            --green: #16a34a; --green-bg: #dcfce7;
+            --amber: #d97706; --amber-bg: #fef3c7;
+            --purple: #7c3aed; --purple-bg: #ede9fe;
+            --red: #dc2626; --red-bg: #fee2e2;
+            --cyan: #0891b2; --cyan-bg: #cffafe;
+            --code-bg: #f8fafc; --code-border: #e2e8f0;
+            --kw: #2563eb; --ty: #0891b2; --fn: #7c3aed; --str: #16a34a;
+            --cm: #94a3b8; --pp: #d97706; --nm: #dc2626;
+            --hl-bg: #fef9c3; --hl-border: #eab308;
+            --t0: #2563eb; --t0-bg: #dbeafe;
+            --t1: #7c3aed; --t1-bg: #ede9fe;
+            --t2: #d97706; --t2-bg: #fef3c7;
+            --t3: #16a34a; --t3-bg: #dcfce7;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        .breadcrumb-bar { padding: 12px 28px 0; display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--text-muted); }
+        .breadcrumb-bar a { color: var(--text-muted); text-decoration: none; }
+        .breadcrumb-bar a:hover { color: var(--accent); }
+        .breadcrumb-bar .crumb-active { color: var(--accent); font-weight: 600; }
+        .breadcrumb-bar .sep { font-size: 12px; }
+        .title-row { padding: 8px 28px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .page-title { font-size: 34px; font-weight: 800; letter-spacing: -.4px; color: var(--text); }
+        .page-title .accent { color: var(--accent); }
+        .speaker-badge { display: flex; align-items: center; gap: 8px; padding: 7px 16px 7px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: .04em; }
+        .speaker-dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 0 3px var(--green-bg); }
+        .content { flex: 1; display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; padding: 0 28px 28px; min-height: 0; }
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+        .panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; background: var(--surface-2); }
+        .panel-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
+        .obj-item { display: flex; gap: 14px; }
+        .obj-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .obj-content { flex: 1; }
+        .obj-label { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+        .obj-desc { font-size: 15px; color: var(--text-muted); line-height: 1.55; }
+        .tag { display: inline-block; padding: 4px 11px; border-radius: 6px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); color: var(--accent); }
+        .divider { height: 1px; background: var(--border); }
+        .inline-code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; background: var(--surface-2); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--purple); }
+
+        /* matrix equation */
+        .matrix-eq { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+        .mat-box { border: 2px solid var(--border); border-radius: 8px; padding: 8px 14px; text-align: center; background: var(--surface-2); }
+        .mat-box .mat-size { font-size: 11px; color: var(--text-muted); display: block; }
+        .mat-box .mat-name { font-size: 18px; font-weight: 800; display: block; margin-top: 1px; }
+        .mat-box.c-mat { border-color: var(--accent); background: var(--accent-light); }
+        .mat-box.c-mat .mat-name { color: var(--accent); }
+        .mat-op { font-size: 20px; font-weight: 700; color: var(--text-muted); }
+
+        /* bullet list */
+        .bullet-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+        .bullet-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--text-muted); line-height: 1.5; }
+        .bullet-list li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 6px; }
+        .bullet-list li strong { color: var(--text); }
+
+        /* partition visualization */
+        .viz-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+        .viz-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 700; background: var(--surface-2); }
+        .viz-sub { font-size: 14px; font-weight: 400; color: var(--text-muted); }
+        .viz-badge { padding: 4px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .viz-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+        .matrix-layout { display: flex; align-items: center; justify-content: center; gap: 12px; flex: 1; }
+        .mat-col { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+        .mat-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-align: center; margin-bottom: 4px; }
+        .mat-grid { border: 2px solid var(--border); border-radius: 8px; overflow: hidden; width: 120px; }
+        .mat-rank-row { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+        .mat-rank-label { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.9); }
+        .mat-rank-range { font-size: 10px; color: rgba(255,255,255,.65); font-family: monospace; }
+        .mat-op-symbol { font-size: 28px; font-weight: 300; color: var(--text-muted); align-self: center; margin-top: 24px; }
+        .mat-b-box { width: 60px; border: 2px solid var(--border); border-radius: 8px; background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px 8px; gap: 6px; }
+        .mat-b-inner { width: 36px; background: var(--accent); border-radius: 4px; opacity: .7; }
+        .mat-b-label { font-size: 10px; color: var(--text-muted); text-align: center; line-height: 1.3; }
+        .mat-c-grid { border: 2px solid var(--accent); border-radius: 8px; overflow: hidden; width: 120px; }
+        .mat-c-row { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .mat-c-row:last-child { border-bottom: none; }
+        .mat-c-label { font-size: 11px; color: rgba(255,255,255,.75); font-family: monospace; }
+
+        /* code strip at bottom of viz */
+        .code-strip { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 10px; }
+        .code-strip-header { padding: 8px 14px; border-bottom: 1px solid var(--code-border); display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 10px 10px 0 0; }
+        .code-dots { display: flex; gap: 6px; }
+        .dot { width: 11px; height: 11px; border-radius: 50%; }
+        .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
+        .code-fname { font-family: monospace; font-size: 13px; color: var(--text-muted); }
+        .code-pre { font-family: "SFMono-Regular", Consolas, monospace; font-size: 14px; line-height: 1.7; white-space: pre; padding: 10px 0; margin: 0; }
+        .code-pre .line { display: block; padding: 0 16px 0 20px; }
+        .code-pre .hl { background: var(--hl-bg); border-left: 3px solid var(--hl-border); padding-left: 17px; }
+        .kw { color: var(--kw); font-weight: 600; } .ty { color: var(--ty); } .fn { color: var(--fn); }
+        .cm { color: var(--cm); font-style: italic; } .pp { color: var(--pp); font-weight: 600; } .nm { color: var(--nm); }
+
+        .footer { height: 44px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-size: 14px; color: var(--text-muted); flex-shrink: 0; }
+    </style>
+</head>
+<body>
+    <div class="breadcrumb-bar" style="margin-bottom:10px">
+        <a href="#">Exam 2</a><span class="sep">›</span>
+        <a href="#">Task 1</a><span class="sep">›</span>
+        <a href="#">Approach A</a><span class="sep">›</span>
+        <span class="crumb-active">MPI Matrix Multiplication Strategy</span>
+    </div>
+    <div class="title-row">
+        <h1 class="page-title">Slide 1: <span class="accent">MPI Matrix Multiplication</span></h1>
+        <div class="speaker-badge"><div class="speaker-dot"></div> Speaker: Ehtesham Faraz</div>
+    </div>
+
+    <div class="content">
+        <!-- LEFT -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+            <!-- The Problem -->
+            <div class="panel">
+                <div class="panel-header">🔴&nbsp; The Problem</div>
+                <div class="panel-body">
+                    <div class="obj-desc">Compute <strong>C = A × B</strong> on a distributed memory system where N×N matrices may be too large to fit in a single node's RAM.</div>
+                    <div class="matrix-eq">
+                        <div class="mat-box"><span class="mat-size">N × N</span><span class="mat-name">A</span></div>
+                        <div class="mat-op">×</div>
+                        <div class="mat-box"><span class="mat-size">N × N</span><span class="mat-name">B</span></div>
+                        <div class="mat-op">=</div>
+                        <div class="mat-box c-mat"><span class="mat-size">N × N</span><span class="mat-name" style="color:var(--accent)">C</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1D Row Decomposition -->
+            <div class="panel" style="flex:1">
+                <div class="panel-header">🔷&nbsp; 1D Row-Wise Decomposition</div>
+                <div class="panel-body">
+                    <div class="obj-item">
+                        <div class="obj-icon" style="background:var(--cyan-bg)">🏃</div>
+                        <div class="obj-content">
+                            <div class="obj-label">SPMD Approach</div>
+                            <div class="obj-desc">Single Program, Multiple Data. Each rank executes the same multiplication logic on its assigned row slice.</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="obj-item">
+                        <div class="obj-icon" style="background:var(--green-bg)">🟢</div>
+                        <div class="obj-content">
+                            <div class="obj-label">Specifics</div>
+                            <div class="obj-desc">Each rank holds <span class="inline-code">N/P</span> rows of A &amp; C. Ranks <span class="inline-code">0..N%P-1</span> get one extra row to handle non-divisible N.</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="obj-item">
+                        <div class="obj-icon" style="background:var(--amber-bg)">⚖️</div>
+                        <div class="obj-content">
+                            <div class="obj-label">Load Balancing</div>
+                            <div class="obj-desc">Remainder rows distributed to lowest-ranked processes. All ranks differ by at most one row — near-perfect balance.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Partitioning Visualization -->
+        <div class="viz-panel">
+            <div class="viz-header">
+                📊&nbsp; Partitioning Visualization
+                <span class="viz-badge">Ranks: P=4</span>
+            </div>
+            <div class="viz-body">
+                <div style="font-size:14px;color:var(--text-muted)">Matrix A is split row-wise across ranks. Each rank generates its own slice of B, then <strong>MPI_Allgatherv</strong> replicates the full B. Result C is gathered to Rank 0.</div>
+
+                <div class="matrix-layout">
+                    <!-- Matrix A -->
+                    <div class="mat-col">
+                        <div class="mat-title">Matrix A (Partitioned)</div>
+                        <div class="mat-grid">
+                            <div class="mat-rank-row" style="background:var(--t0)">
+                                <span class="mat-rank-label">Rank 0</span>
+                                <span class="mat-rank-range">rows 0..N/P-1</span>
+                            </div>
+                            <div class="mat-rank-row" style="background:var(--t1)">
+                                <span class="mat-rank-label">Rank 1</span>
+                                <span class="mat-rank-range">rows N/P..</span>
+                            </div>
+                            <div class="mat-rank-row" style="background:var(--t2)">
+                                <span class="mat-rank-label">Rank 2</span>
+                                <span class="mat-rank-range">rows 2N/P..</span>
+                            </div>
+                            <div class="mat-rank-row" style="background:var(--t3)">
+                                <span class="mat-rank-label">Rank 3</span>
+                                <span class="mat-rank-range">..N-1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mat-op-symbol">×</div>
+
+                    <!-- Matrix B -->
+                    <div class="mat-col">
+                        <div class="mat-title">Matrix B<br><span style="font-size:11px;font-weight:400">(Full Replica)</span></div>
+                        <div class="mat-b-box">
+                            <div class="mat-b-inner" style="height:18px"></div>
+                            <div class="mat-b-inner" style="height:18px"></div>
+                            <div class="mat-b-inner" style="height:18px"></div>
+                            <div class="mat-b-inner" style="height:18px"></div>
+                            <div class="mat-b-label">N×N<br>after<br>Allgatherv</div>
+                        </div>
+                    </div>
+
+                    <div class="mat-op-symbol">=</div>
+
+                    <!-- Matrix C -->
+                    <div class="mat-col">
+                        <div class="mat-title">Matrix C (Result)</div>
+                        <div class="mat-c-grid">
+                            <div class="mat-c-row" style="background:var(--t0)">
+                                <span class="mat-c-label">Computed by Rank 0</span>
+                            </div>
+                            <div class="mat-c-row" style="background:var(--t1)">
+                                <span class="mat-c-label">Computed by Rank 1</span>
+                            </div>
+                            <div class="mat-c-row" style="background:var(--t2)">
+                                <span class="mat-c-label">Computed by Rank 2</span>
+                            </div>
+                            <div class="mat-c-row" style="background:var(--t3)">
+                                <span class="mat-c-label">Computed by Rank 3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code strip -->
+                <div class="code-strip">
+                    <div class="code-strip-header">
+                        <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+                        <span class="code-fname">mpi_matmul.c — row distribution</span>
+                    </div>
+                    <!-- prettier-ignore -->
+                    <pre class="code-pre"><span class="line"><span class="ty">int</span> base_rows = n / size;</span><span class="line"><span class="ty">int</span> remainder = n % size;</span><span class="line hl"><span class="ty">int</span> my_rows   = base_rows + (rank &lt; remainder ? <span class="nm">1</span> : <span class="nm">0</span>);</span><span class="line"> </span><span class="line"><span class="ty">int</span> my_offset = (rank &lt; remainder)</span><span class="line">    ? rank * (base_rows + <span class="nm">1</span>)</span><span class="line">    : remainder * (base_rows + <span class="nm">1</span>) + (rank - remainder) * base_rows;</span></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <span>Parallel Programming &nbsp;&bull;&nbsp; Ehtesham Faraz/Md Fuzail</span>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,9 @@
+--------------------------------------------------------------------------
+prterun was unable to launch the specified application as it lacked
+permissions to execute an executable:
+
+   Executable: ./matmul
+   Node: compute-00
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------

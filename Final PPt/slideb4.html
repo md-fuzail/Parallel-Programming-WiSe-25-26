@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CS 420: Parallel Programming</title>
+    <style>
+        /* Base styles matching the team theme */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #f4f6fa; --surface: #ffffff; --surface-2: #eef1f7; --border: #d8dde8;
+            --text: #1a1f2e; --text-muted: #6b7694;
+            --accent: #2563eb; --accent-dark: #1d4ed8; --accent-light: #dbeafe;
+            --green: #16a34a; --green-bg: #dcfce7;
+            --amber: #d97706; --amber-bg: #fef3c7;
+            --purple: #7c3aed; --purple-bg: #ede9fe;
+            --red: #dc2626; --red-bg: #fee2e2;
+            --cyan: #0891b2; --cyan-bg: #cffafe;
+            --code-bg: #f8fafc; --code-border: #e2e8f0;
+            --kw: #2563eb; --ty: #0891b2; --fn: #7c3aed; --str: #16a34a;
+            --cm: #94a3b8; --pp: #d97706; --nm: #dc2626;
+            --hl-bg: #fef9c3; --hl-border: #eab308;
+            --t0: #2563eb; --t0-bg: #dbeafe;
+            --t1: #7c3aed; --t1-bg: #ede9fe;
+            --t2: #d97706; --t2-bg: #fef3c7;
+            --t3: #16a34a; --t3-bg: #dcfce7;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        .breadcrumb-bar { padding: 12px 28px 0; display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--text-muted); }
+        .breadcrumb-bar a { color: var(--text-muted); text-decoration: none; }
+        .breadcrumb-bar a:hover { color: var(--accent); }
+        .breadcrumb-bar .crumb-active { color: var(--accent); font-weight: 600; }
+        .breadcrumb-bar .sep { font-size: 12px; }
+        .title-row { padding: 8px 28px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .page-title { font-size: 34px; font-weight: 800; letter-spacing: -.4px; color: var(--text); }
+        .page-title .accent { color: var(--accent); }
+        .speaker-badge { display: flex; align-items: center; gap: 8px; padding: 7px 16px 7px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; font-size: 15px; font-weight: 700; color: var(--text); }
+        .speaker-dot { width: 10px; height: 10px; background: var(--purple); border-radius: 50%; box-shadow: 0 0 0 3px var(--purple-bg); }
+        
+        /* Layout */
+        .content { flex: 1; display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; padding: 0 28px 28px; }
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+        .panel-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; background: var(--surface-2); }
+        .panel-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: space-between; }
+        .divider { height: 1px; background: var(--border); }
+        .inline-code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; background: var(--surface-2); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); color: var(--purple); }
+
+        /* Left Side List Items */
+        .obj-item { display: flex; gap: 12px; }
+        .obj-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+        .obj-content { flex: 1; }
+        .obj-label { font-size: 15px; font-weight: 700; margin-bottom: 3px; color: var(--text); }
+        .obj-desc { font-size: 14px; color: var(--text-muted); line-height: 1.45; }
+
+        /* Right Side EduMPI Visuals */
+        .edumpi-container { display: flex; flex-direction: column; gap: 14px; height: 100%; }
+        .edumpi-card { background: var(--surface-2); border: 2px dashed var(--border); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; flex: 1; position: relative; overflow: hidden; }
+        .edumpi-icon { font-size: 32px; margin-bottom: 8px; }
+        .edumpi-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+        .edumpi-desc { font-size: 14px; color: var(--text-muted); }
+        .edumpi-placeholder { font-style: italic; color: var(--accent); margin-top: 8px; font-size: 13px; font-weight: 600; }
+
+        .footer { height: 44px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-size: 14px; color: var(--text-muted); flex-shrink: 0; }
+    </style>
+</head>
+<body>
+    <div class="breadcrumb-bar" style="margin-bottom:10px">
+        <a href="#">Exam 2</a><span class="sep">›</span>
+        <a href="#">Task 1</a><span class="sep">›</span>
+        <a href="#">Approach B</a><span class="sep">›</span>
+        <span class="crumb-active">Strategy Summary & Visualizations</span>
+    </div>
+    <div class="title-row">
+        <h1 class="page-title">Slide 4: <span class="accent" style="color:var(--purple)">Strategy Summary &amp; Visualizations</span></h1>
+        <div class="speaker-badge"><div class="speaker-dot"></div> Speaker : Fuzail</div>
+    </div>
+
+    <div class="content">
+        
+        <div class="panel">
+            <div class="panel-header">⚙️&nbsp; Hierarchical Architecture Overview</div>
+            <div class="panel-body">
+                
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--cyan-bg)">🔷</div>
+                    <div class="obj-content">
+                        <div class="obj-label">1. 1D Row Decomposition</div>
+                        <div class="obj-desc">A strict SPMD approach where the Matrix A workload is statically sliced horizontally across completely independent parallel worker nodes.</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--purple-bg)">🎯</div>
+                    <div class="obj-content">
+                        <div class="obj-label">2. The Core Hypothesis</div>
+                        <div class="obj-desc">HPC networks are volatile. I hypothesized that burning local CPU cycles to generate data would bypass cluster network bottlenecks completely.</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--t0-bg)">📦</div>
+                    <div class="obj-content">
+                        <div class="obj-label">3. Memory Management</div>
+                        <div class="obj-desc">Avoided pointer arrays. All matrices strictly use 1D Contiguous Allocation (<span class="inline-code">malloc(rows * cols)</span>) to prevent memory fragmentation.</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--green-bg)">⚖️</div>
+                    <div class="obj-content">
+                        <div class="obj-label">4. Perfect Load Balancing</div>
+                        <div class="obj-desc">Used deterministic offsets to cleanly distribute remainder rows to lower ranks. Maximum imbalance between any two nodes is strictly 1 row.</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--t1-bg)">🧠</div>
+                    <div class="obj-content">
+                        <div class="obj-label">5. Cache Optimization</div>
+                        <div class="obj-desc">Refactored the compute loop to an <span class="inline-code">i-k-j</span> order. This enables linear stride-1 fetching of Matrix B, maximizing L1/L2 cache hits.</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                
+                <div class="obj-item">
+                    <div class="obj-icon" style="background:var(--amber-bg)">⚠️</div>
+                    <div class="obj-content">
+                        <div class="obj-label">6. Zero-Comm Trade-off</div>
+                        <div class="obj-desc">Achieved 0% network usage during setup by trading bandwidth for redundant <span class="inline-code">O(N²)</span> local PRNG generation of Matrix B on every node.</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">📊&nbsp; EduMPI Visualizations</div>
+            <div class="panel-body">
+                <div class="edumpi-container">
+                    
+                    <div class="edumpi-card" style="padding: 12px 16px; align-items: stretch; border: 1px solid var(--border); background: var(--surface);">
+                        <div style="text-align: left; font-size: 13px; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <strong style="color: var(--text);">Grey State:</strong>
+                            <span style="color: var(--text-muted);">Isolated computation with 0% network utilization</span>
+                        </div>
+                        <img src="Grey State.png" alt="EduMPI Grey State" style="width: 100%; flex: 1; min-height: 0; object-fit: contain; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2);" />
+                    </div>
+
+                    <div class="edumpi-card" style="padding: 12px 16px; align-items: stretch; border: 1px solid var(--border); background: var(--surface);">
+                        <div style="text-align: left; font-size: 13px; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <strong style="color: var(--text);">Clean Gather:</strong>
+                            <span style="color: var(--text-muted);">A single MPI_Gatherv operation at program exit</span>
+                        </div>
+                        <img src="Gatherv.png" alt="EduMPI Clean Gather" style="width: 100%; flex: 1; min-height: 0; object-fit: contain; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2);" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="footer">
+        <span>Parallel Programming &nbsp;&bull;&nbsp; Ehtesham Faraz/Md Fuzail</span>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CS 420: Parallel Programming</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #f4f6fa; --surface: #ffffff; --surface-2: #eef1f7; --border: #d8dde8;
+            --text: #1a1f2e; --text-muted: #6b7694;
+            --accent: #2563eb; --accent-dark: #1d4ed8; --accent-light: #dbeafe;
+            --green: #16a34a; --green-bg: #dcfce7;
+            --amber: #d97706; --amber-bg: #fef3c7;
+            --purple: #7c3aed; --purple-bg: #ede9fe;
+            --red: #dc2626; --red-bg: #fee2e2;
+            --cyan: #0891b2; --cyan-bg: #cffafe;
+            --code-bg: #f8fafc; --code-border: #e2e8f0;
+            --kw: #2563eb; --ty: #0891b2; --fn: #7c3aed; --str: #16a34a;
+            --cm: #94a3b8; --pp: #d97706; --nm: #dc2626;
+            --hl-bg: #fef9c3; --hl-border: #eab308;
+            --t0: #2563eb; --t0-bg: #dbeafe;
+            --t1: #7c3aed; --t1-bg: #ede9fe;
+            --t2: #d97706; --t2-bg: #fef3c7;
+            --t3: #16a34a; --t3-bg: #dcfce7;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        .breadcrumb-bar { padding: 12px 28px 0; display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--text-muted); }
+        .breadcrumb-bar a { color: var(--text-muted); text-decoration: none; }
+        .breadcrumb-bar a:hover { color: var(--accent); }
+        .breadcrumb-bar .crumb-active { color: var(--accent); font-weight: 600; }
+        .breadcrumb-bar .sep { font-size: 12px; }
+        .title-row { padding: 8px 28px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .page-title { font-size: 34px; font-weight: 800; letter-spacing: -.4px; color: var(--text); }
+        .page-title .accent { color: var(--accent); }
+        .speaker-badge { display: flex; align-items: center; gap: 8px; padding: 7px 16px 7px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; font-size: 15px; font-weight: 700; color: var(--text); }
+        .speaker-dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 0 3px var(--green-bg); }
+        .content { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 28px 28px; }
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+        .panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; background: var(--surface-2); }
+        .panel-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+        .obj-item { display: flex; gap: 14px; }
+        .obj-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .obj-content { flex: 1; }
+        .obj-label { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+        .obj-desc { font-size: 15px; color: var(--text-muted); line-height: 1.55; }
+        .divider { height: 1px; background: var(--border); }
+        .inline-code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; background: var(--surface-2); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--purple); }
+
+        /* code panel */
+        .code-panel { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+        .code-header { padding: 10px 16px; border-bottom: 1px solid var(--code-border); display: flex; align-items: center; gap: 10px; background: var(--surface); }
+        .code-dots { display: flex; gap: 7px; }
+        .dot { width: 13px; height: 13px; border-radius: 50%; }
+        .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
+        .code-filename { font-family: monospace; font-size: 15px; color: var(--text-muted); }
+        .code-body { flex: 1; overflow: auto; }
+        .code-pre { font-family: "SFMono-Regular", Consolas, monospace; font-size: 15px; line-height: 1.7; white-space: pre; padding: 10px 0; margin: 0; }
+        .code-pre .line { display: block; padding: 0 16px 0 22px; }
+        .code-pre .hl { background: var(--hl-bg); border-left: 3px solid var(--hl-border); padding-left: 19px; }
+        .kw { color: var(--kw); font-weight: 600; } .ty { color: var(--ty); } .fn { color: var(--fn); }
+        .cm { color: var(--cm); font-style: italic; } .pp { color: var(--pp); font-weight: 600; } .nm { color: var(--nm); }
+
+        /* observation / limitation banners */
+        .banner { display: flex; gap: 12px; align-items: flex-start; padding: 13px 15px; border-radius: 10px; border: 1px solid; }
+        .banner-title { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+        .banner-desc { font-size: 14px; line-height: 1.5; }
+        .banner.obs { background: var(--green-bg); border-color: #86efac; }
+        .banner.obs .banner-title { color: var(--green); }
+        .banner.obs .banner-desc { color: var(--text-muted); }
+        .banner.lim { background: var(--amber-bg); border-color: #fcd34d; }
+        .banner.lim .banner-title { color: var(--amber); }
+        .banner.lim .banner-desc { color: var(--text-muted); }
+
+        /* MPI_Gatherv diagram */
+        .gatherv-wrap { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .gv-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; }
+        .gv-ranks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
+        .gv-rank { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; text-align: center; }
+        .gv-rank-title { padding: 4px 6px; font-size: 10px; font-weight: 700; }
+        .gv-rank-slice { padding: 5px; font-size: 9px; font-weight: 700; font-family: monospace; }
+        .gv-arrow { font-size: 24px; color: var(--accent); }
+        .gv-master { background: var(--t0-bg); border: 2px solid var(--t0); border-radius: 8px; padding: 10px 16px; text-align: center; }
+        .gv-master-title { font-size: 13px; font-weight: 700; color: var(--t0); margin-bottom: 4px; }
+        .gv-master-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+        .gv-master-slot { border-radius: 3px; padding: 4px; font-size: 9px; font-weight: 700; font-family: monospace; text-align: center; }
+
+        /* verification card */
+        .verify-item { display: flex; gap: 10px; align-items: flex-start; }
+        .verify-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+        .verify-label { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+        .verify-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+        .passed-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-bg); border: 1px solid #86efac; border-radius: 6px; padding: 4px 12px; font-size: 13px; font-weight: 700; color: var(--green); margin-top: 6px; }
+
+        /* perf stats */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+        .stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+        .stat-value { font-size: 18px; font-weight: 800; color: var(--text); font-family: monospace; margin-top: 3px; }
+        .stat-sub { font-size: 12px; color: var(--text-muted); }
+
+        .footer { height: 44px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; font-size: 14px; color: var(--text-muted); flex-shrink: 0; }
+    </style>
+</head>
+<body>
+    <div class="breadcrumb-bar" style="margin-bottom:10px">
+        <a href="#">Exam 2</a><span class="sep">›</span>
+        <a href="#">Task 1</a><span class="sep">›</span>
+        <a href="#">Approach A</a><span class="sep">›</span>
+        <span class="crumb-active">Computation &amp; Verification</span>
+    </div>
+    <div class="title-row">
+        <h1 class="page-title">Slide 4: <span class="accent">Computation &amp; Verification</span></h1>
+        <div class="speaker-badge"><div class="speaker-dot"></div> Speaker: Ehtesham Faraz</div>
+    </div>
+
+    <div class="content">
+        <!-- LEFT: Code + banners -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="code-panel" style="flex:1">
+                <div class="code-header">
+                    <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+                    <span style="font-size:14px;color:var(--text-muted)">&#x3C;/&#x3E;</span>
+                    <span class="code-filename">mpi_matmul.c — ikj compute loop</span>
+                </div>
+                <div class="code-body">
+                    <!-- prettier-ignore -->
+                    <pre class="code-pre"><span class="line"><span class="cm">/* ikj loop order: maximises cache reuse of B rows */</span></span><span class="line"><span class="kw">for</span> (<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; my_rows; i++) {</span><span class="line hl">    <span class="kw">for</span> (<span class="ty">int</span> k = <span class="nm">0</span>; k &lt; n; k++) {</span><span class="line hl">        <span class="ty">double</span> temp = local_A[i * n + k]; <span class="cm">/* scalar hoist */</span></span><span class="line hl">        <span class="kw">for</span> (<span class="ty">int</span> j = <span class="nm">0</span>; j &lt; n; j++) {</span><span class="line hl">            local_C[i * n + j] += temp * B[k * n + j];</span><span class="line hl">        }</span><span class="line hl">    }</span><span class="line">}</span><span class="line"> </span><span class="line"><span class="cm">/* Collect result slices on Rank 0 for verification */</span></span><span class="line"><span class="kw">if</span> (rank == <span class="nm">0</span>) {</span><span class="line">    <span class="ty">double</span> checksum = <span class="nm">0</span>;</span><span class="line">    <span class="kw">for</span> (<span class="ty">long</span> i = <span class="nm">0</span>; i &lt; (<span class="ty">long</span>)n * n; i++)</span><span class="line">        checksum += C[i];</span><span class="line">    <span class="fn">printf</span>(<span class="str">"Checksum: %f\n"</span>, checksum);</span><span class="line">}</span></pre>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="banner obs">
+                    <span style="font-size:18px;flex-shrink:0">📈</span>
+                    <div>
+                        <div class="banner-title">Observation</div>
+                        <div class="banner-desc">ikj order keeps B rows in L1/L2 cache across the inner j-loop, greatly reducing cache misses vs. naive ijk.</div>
+                    </div>
+                </div>
+                <div class="banner lim">
+                    <span style="font-size:18px;flex-shrink:0">⚠️</span>
+                    <div>
+                        <div class="banner-title">Limitation</div>
+                        <div class="banner-desc">Full B replica (N×N per node) limits scalability. For very large N, a Cannon's algorithm avoids this overhead.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Gatherv + Verification -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+            <!-- MPI_Gatherv diagram -->
+            <div class="panel">
+                <div class="panel-header">📥&nbsp; MPI_Gatherv — Collect to Rank 0</div>
+                <div class="panel-body">
+                    <div style="font-size:14px;color:var(--text-muted)">Each rank sends its computed slice of C. Only Rank 0 allocates the full result matrix.</div>
+                    <div class="gatherv-wrap">
+                        <div class="gv-label">Each rank holds a slice of C</div>
+                        <div class="gv-ranks">
+                            <div class="gv-rank">
+                                <div class="gv-rank-title" style="background:var(--t0-bg);color:var(--t0)">Rank 0</div>
+                                <div class="gv-rank-slice" style="background:var(--t0-bg);color:var(--t0)">rows 0..N/P</div>
+                            </div>
+                            <div class="gv-rank">
+                                <div class="gv-rank-title" style="background:var(--t1-bg);color:var(--t1)">Rank 1</div>
+                                <div class="gv-rank-slice" style="background:var(--t1-bg);color:var(--t1)">rows N/P..</div>
+                            </div>
+                            <div class="gv-rank">
+                                <div class="gv-rank-title" style="background:var(--t2-bg);color:var(--t2)">Rank 2</div>
+                                <div class="gv-rank-slice" style="background:var(--t2-bg);color:var(--t2)">rows 2N/P..</div>
+                            </div>
+                            <div class="gv-rank">
+                                <div class="gv-rank-title" style="background:var(--t3-bg);color:var(--t3)">Rank 3</div>
+                                <div class="gv-rank-slice" style="background:var(--t3-bg);color:var(--t3)">..N-1</div>
+                            </div>
+                        </div>
+                        <div class="gv-arrow">↓ MPI_Gatherv ↓</div>
+                        <div class="gv-master">
+                            <div class="gv-master-title">🗄 Rank 0 (Master) — Full C</div>
+                            <div class="gv-master-slots">
+                                <div class="gv-master-slot" style="background:var(--t0);color:#fff">R0</div>
+                                <div class="gv-master-slot" style="background:var(--t1);color:#fff">R1</div>
+                                <div class="gv-master-slot" style="background:var(--t2);color:#fff">R2</div>
+                                <div class="gv-master-slot" style="background:var(--t3);color:#fff">R3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification -->
+            <div class="panel" style="flex:1">
+                <div class="panel-header">✅&nbsp; Verification Methodology</div>
+                <div class="panel-body">
+                    <div class="verify-item">
+                        <div class="verify-dot" style="background:var(--accent)"></div>
+                        <div>
+                            <div class="verify-label">Checksum Calculation</div>
+                            <div class="verify-desc">Rank 0 sums all N² elements of C using <span class="inline-code">double</span> arithmetic. Compared against a sequential baseline for correctness.</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="verify-item">
+                        <div class="verify-dot" style="background:var(--green)"></div>
+                        <div>
+                            <div class="verify-label">Validation Status</div>
+                            <div class="verify-desc">Checksum matches sequential reference across all tested configurations.</div>
+                            <div class="passed-badge">✓ PASSED — Checksum matches sequential baseline</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Compute / Node</div>
+                            <div class="stat-value">O(N³/P)</div>
+                            <div class="stat-sub">ideal linear speedup</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Communication</div>
+                            <div class="stat-value">O(N²)</div>
+                            <div class="stat-sub">one-time Allgatherv</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <span>Parallel Programming &nbsp;&bull;&nbsp; Ehtesham Faraz/Md Fuzail</span>
+    </footer>
+</body>
+</html>
